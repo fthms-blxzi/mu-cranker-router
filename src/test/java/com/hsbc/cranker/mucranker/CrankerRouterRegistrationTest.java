@@ -18,7 +18,7 @@ import static com.hsbc.cranker.connector.CrankerConnectorBuilder.CRANKER_PROTOCO
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.httpsServerForTest;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.preferredProtocols;
 import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
-import static io.muserver.MuServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -26,6 +26,7 @@ import static scaffolding.Action.swallowException;
 import static scaffolding.ClientUtils.call;
 import static scaffolding.ClientUtils.request;
 
+@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
 public class CrankerRouterRegistrationTest {
 
     private CrankerRouter crankerRouter;

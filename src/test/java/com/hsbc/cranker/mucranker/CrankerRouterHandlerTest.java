@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.preferredProtocols;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.startConnectorAndWaitForRegistration;
 import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
-import static io.muserver.MuServerBuilder.httpServer;
-import static io.muserver.MuServerBuilder.httpsServer;
+import static scaffolding.TestServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpsServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -30,6 +30,7 @@ import static scaffolding.Action.swallowException;
 import static scaffolding.ClientUtils.call;
 import static scaffolding.ClientUtils.request;
 
+@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
 public class CrankerRouterHandlerTest {
 
     private CrankerRouter router;

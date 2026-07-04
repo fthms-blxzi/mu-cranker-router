@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.*;
 import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
-import static io.muserver.MuServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static scaffolding.Action.swallowException;
@@ -78,11 +78,16 @@ public class CrankerRouterCleanTest {
 
         // assert route info clear before de-register
         assertEventually(() -> {
-            try (Response resp = client.newCall(request(router.uri().resolve("/health/connectors")).build()).execute()) {
-                assertThat(resp.code(), is(200));
-                assert resp.body() != null;
-                final JSONObject servicesJson = new JSONObject(resp.body().string()).getJSONObject("services");
-                return servicesJson.has("something");
+            boolean isRustMode = Boolean.getBoolean("cranker.router.rust") || "true".equalsIgnoreCase(System.getenv("CRANKER_ROUTER_RUST"));
+            if (isRustMode) {
+                return crankerRouter.collectInfo().service("something").isPresent();
+            } else {
+                try (Response resp = client.newCall(request(router.uri().resolve("/health/connectors")).build()).execute()) {
+                    assertThat(resp.code(), is(200));
+                    assert resp.body() != null;
+                    final JSONObject servicesJson = new JSONObject(resp.body().string()).getJSONObject("services");
+                    return servicesJson.has("something");
+                }
             }
         }, is(true));
 
@@ -91,11 +96,16 @@ public class CrankerRouterCleanTest {
 
         // assert route info clear after de-register
         assertEventually(() -> {
-            try (Response resp = client.newCall(request(router.uri().resolve("/health/connectors")).build()).execute()) {
-                assertThat(resp.code(), is(200));
-                assert resp.body() != null;
-                final JSONObject servicesJson = new JSONObject(resp.body().string()).getJSONObject("services");
-                return servicesJson.has("something");
+            boolean isRustMode = Boolean.getBoolean("cranker.router.rust") || "true".equalsIgnoreCase(System.getenv("CRANKER_ROUTER_RUST"));
+            if (isRustMode) {
+                return crankerRouter.collectInfo().service("something").isPresent();
+            } else {
+                try (Response resp = client.newCall(request(router.uri().resolve("/health/connectors")).build()).execute()) {
+                    assertThat(resp.code(), is(200));
+                    assert resp.body() != null;
+                    final JSONObject servicesJson = new JSONObject(resp.body().string()).getJSONObject("services");
+                    return servicesJson.has("something");
+                }
             }
         }, is(false));
 

@@ -19,8 +19,8 @@ import static com.hsbc.cranker.connector.CrankerConnectorBuilder.CRANKER_PROTOCO
 import static com.hsbc.cranker.connector.CrankerConnectorBuilder.CRANKER_PROTOCOL_3;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.preferredProtocols;
 import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
-import static io.muserver.MuServerBuilder.httpServer;
-import static io.muserver.MuServerBuilder.httpsServer;
+import static scaffolding.TestServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpsServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static scaffolding.Action.swallowException;
@@ -37,11 +37,16 @@ public class RouterInfoTest {
 
     @AfterEach
     public void cleanup() {
-        if (connector != null) swallowException(() -> connector.stop(5, TimeUnit.SECONDS));
-        if (connector2 != null) swallowException(() -> connector2.stop(5, TimeUnit.SECONDS));
-        if (target != null) swallowException(target::stop);
-        if (routerServer != null) swallowException(routerServer::stop);
-        if (router != null) swallowException(router::stop);
+        if (connector != null)
+            swallowException(() -> connector.stop(5, TimeUnit.SECONDS));
+        if (connector2 != null)
+            swallowException(() -> connector2.stop(5, TimeUnit.SECONDS));
+        if (target != null)
+            swallowException(target::stop);
+        if (routerServer != null)
+            swallowException(routerServer::stop);
+        if (router != null)
+            swallowException(router::stop);
     }
 
     @RepeatedTest(3)
@@ -49,27 +54,30 @@ public class RouterInfoTest {
         router = crankerRouter().withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0")).start();
 
         routerServer = httpsServer()
-            .addHandler(router.createRegistrationHandler())
-            .addHandler(router.createHttpHandler())
-            .start();
+                .addHandler(router.createRegistrationHandler())
+                .addHandler(router.createHttpHandler())
+                .start();
 
         target = httpServer()
-            .addHandler((req, resp) -> {
-                resp.write("Got " + req.method() + " " + req.uri().getRawPath() + " and query " + req.query().get("this thing"));
-                return true;
-            })
-            .start();
+                .addHandler((req, resp) -> {
+                    resp.write("Got " + req.method() + " " + req.uri().getRawPath() + " and query "
+                            + req.query().get("this thing"));
+                    return true;
+                })
+                .start();
 
         assertThat(router.collectInfo().services(), hasSize(0));
 
         connector = startConnector("my-target-server", preferredProtocols(repetitionInfo));
         connector2 = startConnector("another-target-server", preferredProtocols(repetitionInfo));
 
-        try (Response resp = call(request(routerServer.uri().resolve("/my-target-server/blah%20blah?this%20thing=some%20value")))) {
+        try (Response resp = call(
+                request(routerServer.uri().resolve("/my-target-server/blah%20blah?this%20thing=some%20value")))) {
             assertThat(resp.code(), is(200));
             assertThat(resp.body().string(), is("Got GET /my-target-server/blah%20blah and query some value"));
         }
-        try (Response resp = call(request(routerServer.uri().resolve("/another-target-server/blah%20blah?this%20thing=some%20value")))) {
+        try (Response resp = call(
+                request(routerServer.uri().resolve("/another-target-server/blah%20blah?this%20thing=some%20value")))) {
             assertThat(resp.code(), is(200));
             assertThat(resp.body().string(), is("Got GET /another-target-server/blah%20blah and query some value"));
         }
@@ -88,25 +96,26 @@ public class RouterInfoTest {
     public void infoIsExposedAsAMapForSimpleHealthReporting(RepetitionInfo repetitionInfo) throws IOException {
         router = crankerRouter().withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0")).start();
         routerServer = httpsServer()
-            .addHandler(Method.GET, "/health",
-                (req, resp, pathParams) -> {
-                    resp.contentType("application/json");
-                    JSONObject health = new JSONObject()
-                        .put("isAvailable", true)
-                        .put("mucrankerVersion", CrankerRouter.muCrankerVersion())
-                        .put("services", router.collectInfo().toMap());
-                    resp.write(health.toString(2));
-                })
-            .addHandler(router.createRegistrationHandler())
-            .addHandler(router.createHttpHandler())
-            .start();
+                .addHandler(Method.GET, "/health",
+                        (req, resp, pathParams) -> {
+                            resp.contentType("application/json");
+                            JSONObject health = new JSONObject()
+                                    .put("isAvailable", true)
+                                    .put("mucrankerVersion", CrankerRouter.muCrankerVersion())
+                                    .put("services", router.collectInfo().toMap());
+                            resp.write(health.toString(2));
+                        })
+                .addHandler(router.createRegistrationHandler())
+                .addHandler(router.createHttpHandler())
+                .start();
 
         target = httpServer()
-            .addHandler((req, resp) -> {
-                resp.write("Got " + req.method() + " " + req.uri().getRawPath() + " and query " + req.query().get("this thing"));
-                return true;
-            })
-            .start();
+                .addHandler((req, resp) -> {
+                    resp.write("Got " + req.method() + " " + req.uri().getRawPath() + " and query "
+                            + req.query().get("this thing"));
+                    return true;
+                })
+                .start();
 
         connector = startConnector("my-target-server", preferredProtocols(repetitionInfo));
         connector2 = startConnector("another-target-server", preferredProtocols(repetitionInfo));
@@ -114,7 +123,9 @@ public class RouterInfoTest {
         call(request(routerServer.uri().resolve("/my-target-server/"))).close();
 
         try (Response resp = call(request(routerServer.uri().resolve("/health")))) {
-            JSONObject health = new JSONObject(resp.body().string());
+            String resStr = resp.body().string();
+            System.err.println("################" + resStr + "###################");
+            JSONObject health = new JSONObject(resStr);
             JSONObject services = health.getJSONObject("services");
             assertThat(services.has("my-target-server"), is(true));
             assertThat(services.has("another-target-server"), is(true));
@@ -140,25 +151,26 @@ public class RouterInfoTest {
     public void infoIsExposedAsAMapForSimpleHealthReportingForBothV1AndV3() throws IOException {
         router = crankerRouter().withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0")).start();
         routerServer = httpsServer()
-            .addHandler(Method.GET, "/health",
-                (req, resp, pathParams) -> {
-                    resp.contentType("application/json");
-                    JSONObject health = new JSONObject()
-                        .put("isAvailable", true)
-                        .put("mucrankerVersion", CrankerRouter.muCrankerVersion())
-                        .put("services", router.collectInfo().toMap());
-                    resp.write(health.toString(2));
-                })
-            .addHandler(router.createRegistrationHandler())
-            .addHandler(router.createHttpHandler())
-            .start();
+                .addHandler(Method.GET, "/health",
+                        (req, resp, pathParams) -> {
+                            resp.contentType("application/json");
+                            JSONObject health = new JSONObject()
+                                    .put("isAvailable", true)
+                                    .put("mucrankerVersion", CrankerRouter.muCrankerVersion())
+                                    .put("services", router.collectInfo().toMap());
+                            resp.write(health.toString(2));
+                        })
+                .addHandler(router.createRegistrationHandler())
+                .addHandler(router.createHttpHandler())
+                .start();
 
         target = httpServer()
-            .addHandler((req, resp) -> {
-                resp.write("Got " + req.method() + " " + req.uri().getRawPath() + " and query " + req.query().get("this thing"));
-                return true;
-            })
-            .start();
+                .addHandler((req, resp) -> {
+                    resp.write("Got " + req.method() + " " + req.uri().getRawPath() + " and query "
+                            + req.query().get("this thing"));
+                    return true;
+                })
+                .start();
 
         connector = startConnector("my-target-server", List.of(CRANKER_PROTOCOL_1));
         connector2 = startConnector("my-target-server", List.of(CRANKER_PROTOCOL_3));
@@ -201,7 +213,8 @@ public class RouterInfoTest {
     }
 
     private CrankerConnector startConnector(String targetServiceName, List<String> preferredProtocols) {
-        return BaseEndToEndTest.startConnectorAndWaitForRegistration(router, "*", target, preferredProtocols, targetServiceName, routerServer);
+        return BaseEndToEndTest.startConnectorAndWaitForRegistration(router, "*", target, preferredProtocols,
+                targetServiceName, routerServer);
     }
 
 }

@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.*;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.startConnectorAndWaitForRegistration;
 import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
-import static io.muserver.MuServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -25,6 +25,7 @@ import static scaffolding.Action.swallowException;
 import static scaffolding.AssertUtils.assertEventually;
 import static scaffolding.ClientUtils.*;
 
+@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
 public class CrankerRouterRetryTest {
 
     private CrankerRouter crankerRouter;

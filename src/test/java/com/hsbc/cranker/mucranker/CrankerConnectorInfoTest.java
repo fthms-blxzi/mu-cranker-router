@@ -19,8 +19,8 @@ import java.util.stream.IntStream;
 
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.startConnector;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.waitForRegistration;
-import static io.muserver.MuServerBuilder.httpServer;
-import static io.muserver.MuServerBuilder.httpsServer;
+import static scaffolding.TestServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpsServer;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static scaffolding.Action.swallowException;

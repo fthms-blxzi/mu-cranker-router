@@ -10,6 +10,7 @@ import org.junit.jupiter.api.RepetitionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scaffolding.AssertUtils;
+import scaffolding.TestServerBuilder;
 
 import java.io.IOException;
 import java.net.URI;
@@ -22,7 +23,7 @@ import java.util.stream.Stream;
 
 import static com.hsbc.cranker.connector.CrankerConnectorBuilder.CRANKER_PROTOCOL_1;
 import static com.hsbc.cranker.connector.CrankerConnectorBuilder.CRANKER_PROTOCOL_3;
-import static io.muserver.MuServerBuilder.httpsServer;
+import static scaffolding.TestServerBuilder.httpsServer;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -115,7 +116,7 @@ public abstract class BaseEndToEndTest {
                 .start();
     }
 
-    public static MuServerBuilder httpsServerForTest() {
+    public static TestServerBuilder httpsServerForTest() {
         return httpsServer();
     }
 

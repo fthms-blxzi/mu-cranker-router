@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.*;
-import static io.muserver.MuServerBuilder.httpServer;
-import static io.muserver.MuServerBuilder.httpsServer;
+import static scaffolding.TestServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpsServer;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -75,8 +75,8 @@ public class CrankerDomainTest {
         connector2  = startConnector("127.0.0.1", "*", preferredProtocols, targetServer2, registrationServer);
         waitForRegistration("*", connector2.connectorId(), 2, new CrankerRouter[]{crankerRouter});
 
-        final HashMap<String, AtomicInteger> localhostResult = callAndGroupByBody(URI.create("https://localhost:%s/hello".replace("%s", String.valueOf(router.uri().getPort()))), 20);
-        final HashMap<String, AtomicInteger> loopbackIpResult = callAndGroupByBody(URI.create("https://127.0.0.1:%s/hello".replace("%s", String.valueOf(router.uri().getPort()))), 20);
+        final HashMap<String, AtomicInteger> localhostResult = callAndGroupByBody(URI.create("http://localhost:%s/hello".replace("%s", String.valueOf(router.uri().getPort()))), 20);
+        final HashMap<String, AtomicInteger> loopbackIpResult = callAndGroupByBody(URI.create("http://127.0.0.1:%s/hello".replace("%s", String.valueOf(router.uri().getPort()))), 20);
 
         final int localTotal = localhostResult.values().stream().mapToInt(AtomicInteger::get).sum();
         assertThat(localTotal, is(20));

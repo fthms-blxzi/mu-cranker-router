@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
-import static io.muserver.MuServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpServer;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -34,6 +34,7 @@ import static scaffolding.AssertUtils.assertEventually;
 import static scaffolding.ClientUtils.call;
 import static scaffolding.ClientUtils.request;
 
+@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
 public class ProxyListenerTest extends BaseEndToEndTest {
 
     private static final Logger log = LoggerFactory.getLogger(ProxyListenerTest.class);

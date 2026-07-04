@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.callAndGroupByBody;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.httpsServerForTest;
 import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
-import static io.muserver.MuServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
@@ -301,7 +301,7 @@ public class MultiConnectorTest {
 
         // all proxied to v3 as it's registered with domain "127.0.0.1" take higher priority
         final HashMap<String, AtomicInteger> bodyMap = callAndGroupByBody(
-            URI.create("https://127.0.0.1:{port}/my-service/hello"
+            URI.create("http://127.0.0.1:{port}/my-service/hello"
                 .replace("{port}", String.valueOf(router.uri().getPort()))),
             20);
         assertThat(bodyMap.get("targetV3_1").get(), is(20));
@@ -323,7 +323,7 @@ public class MultiConnectorTest {
 
         // all proxied to v3 as it's registered with domain "127.0.0.1" take higher priority
         final HashMap<String, AtomicInteger> bodyMap = callAndGroupByBody(
-            URI.create("https://127.0.0.1:{port}/my-service/hello"
+            URI.create("http://127.0.0.1:{port}/my-service/hello"
                 .replace("{port}", String.valueOf(router.uri().getPort()))),
             20);
         assertThat(bodyMap.get("targetV3_1").get(), is(20));

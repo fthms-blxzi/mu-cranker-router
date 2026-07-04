@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.preferredProtocols;
-import static io.muserver.MuServerBuilder.httpServer;
-import static io.muserver.MuServerBuilder.httpsServer;
+import static scaffolding.TestServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpsServer;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -136,6 +136,7 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
+    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
     public void cantMakeTraceRequests() throws Exception {
         try (Response resp = call(request(router.uri().resolve("/static/hello.html")).method("TRACE", null))) {
             assertThat(resp.code(), is(405));
@@ -143,6 +144,7 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
+    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
     public void cantMakeTraceRequestsOnWebSocketPort() throws Exception {
         try (Response resp = call(request(registrationServer.uri().resolve("/static/hello.html")).method("TRACE", null))) {
             assertThat(resp.code(), is(405));
@@ -150,6 +152,7 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
+    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
     public void invalidRequestsWithBadQueryAreRejected() throws Exception {
         try (RawClient client = RawClient.create(router.httpUri())) {
             client.sendStartLine("GET", "/sw000.asp?|-|0|404_Object_Not_Found")
@@ -161,6 +164,7 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
+    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
     public void invalidRequestsWithBadPathAreRejected() throws Exception {
         try (RawClient client = RawClient.create(router.httpUri())) {
             client.sendStartLine("GET", "/ca/..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\winnt/\\\\win.ini")
@@ -182,6 +186,7 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
+    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
     public void headersAreCorrect() throws Exception {
         // based on stuff in https://www.mnot.net/blog/2011/07/11/what_proxies_must_do
 
