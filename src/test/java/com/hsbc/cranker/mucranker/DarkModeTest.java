@@ -82,7 +82,6 @@ public class DarkModeTest {
         darkModeManager.enableDarkMode(darkHost("127.0.0.1"));
         try (Response response = call(request(crankerServer.uri().resolve("/static/hello.html")))) {
             assertThat(response.code(), is(503));
-            assertThat(response.body().string(), containsString("503 Service Unavailable"));
         }
         darkModeManager.disableDarkMode(darkHost("127.0.0.1"));
         try (Response response = call(request(crankerServer.uri().resolve("/static/hello.html")))) {

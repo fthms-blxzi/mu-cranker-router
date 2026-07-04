@@ -60,7 +60,12 @@ public class ClientUtils {
     }
 
     public static Request.Builder request() {
-        return new Request.Builder();
+        Request.Builder builder = new Request.Builder();
+        boolean isRustMode = Boolean.getBoolean("cranker.router.rust") || "true".equalsIgnoreCase(System.getenv("CRANKER_ROUTER_RUST"));
+        if (isRustMode) {
+            builder.header("Connection", "close");
+        }
+        return builder;
     }
     public static Request.Builder request(URI uri) {
         return request().url(uri.toString());

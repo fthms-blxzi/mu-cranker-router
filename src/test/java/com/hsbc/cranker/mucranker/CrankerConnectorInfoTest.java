@@ -95,7 +95,8 @@ public class CrankerConnectorInfoTest {
             try (Response resp = client.newCall(request(router.uri().resolve("/health/connectors")).build()).execute()) {
                 assertThat(resp.code(), Matchers.is(200));
                 assert resp.body() != null;
-                final JSONObject servicesJson = new JSONObject(resp.body().string()).getJSONObject("services");
+                String bodyStr = resp.body().string();
+                final JSONObject servicesJson = new JSONObject(bodyStr).getJSONObject("services");
                 JSONArray connectors = servicesJson.getJSONObject("*").getJSONArray("connectors");
                 List<String> componentNames = IntStream.range(0, connectors.length()).mapToObj(i -> connectors.getJSONObject(i).getString("componentName")).collect(Collectors.toList());
                 return componentNames.size() == 2 && componentNames.containsAll(List.of("service-a", "service-b"));
