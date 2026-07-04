@@ -46,13 +46,22 @@ public class RustCrankerRouter implements CrankerRouter {
 
         Process proc = null;
         try {
-            // Locate Rust binary. Since maven runs in mu-cranker-router/
-            File exe = new File("../scr-axum-cranker-router/target/debug/examples/router_server.exe");
+            String envExe = System.getenv("RUST_ROUTER_SERVER_EXE");
+            File exe = envExe != null ? new File(envExe) : null;
+            if (exe == null || !exe.exists()) {
+                exe = new File("../scr-axum-cranker-router/target/debug/router_server.exe");
+            }
+            if (!exe.exists()) {
+                exe = new File("../scr-axum-cranker-router/target/release/router_server.exe");
+            }
+            if (!exe.exists()) {
+                exe = new File("../scr-axum-cranker-router/target/debug/examples/router_server.exe");
+            }
             if (!exe.exists()) {
                 exe = new File("../scr-axum-cranker-router/target/release/examples/router_server.exe");
             }
             if (!exe.exists()) {
-                throw new IllegalStateException("Rust router_server binary not found. Please run 'cargo build --example router_server'");
+                throw new IllegalStateException("Rust router_server binary not found. Please specify RUST_ROUTER_SERVER_EXE or run 'cargo build --bin router_server'");
             }
 
             List<String> cmd = new ArrayList<>();
