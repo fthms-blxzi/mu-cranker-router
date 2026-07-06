@@ -18,7 +18,7 @@ public class RunLocal {
 
         // Use the mu-cranker-router builder to create a router object.
         CrankerRouter router = CrankerRouterBuilder.crankerRouter()
-            .withSupportedCrankerProtocols(List.of("cranker_3.0", "cranker_1.0"))
+            .withSupportedCrankerProtocols(List.of(CrankerRouterBuilder.CRANKER_PROTOCOL_3_1, CrankerRouterBuilder.CRANKER_PROTOCOL_3, CrankerRouterBuilder.CRANKER_PROTOCOL_1))
             .withIdleTimeout(5, TimeUnit.MINUTES)
             .withRegistrationIpValidator(ip -> true)
             .start();
@@ -28,7 +28,7 @@ public class RunLocal {
         // like health diagnostics, extra authentication or logging etc.
         // The last handler added is the registration handler that the CrankerRouter object supplies.
         MuServer registrationServer = muServer()
-            .withHttpsPort(12001)
+            .withHttpPort(12001)
             .addHandler(Method.GET, "/health", new HealthHandler(router))
             .addHandler(Method.GET, "/health/connections", (request, response, pathParams) -> {
                 response.contentType("text/plain;charset=utf-8");
@@ -53,7 +53,7 @@ public class RunLocal {
         // Next create the server that HTTP clients will connect to. In this example, HTTP2 is enabled,
         // a favicon is enabled, and then the handler that the CrankerRouter object supplies is added last.
         MuServer httpServer = muServer()
-            .withHttpsPort(12000)
+            .withHttpPort(12000)
             .withHttp2Config(Http2ConfigBuilder.http2EnabledIfAvailable())
             .addHandler(FavIconHandler.fromClassPath("/favicon.ico"))
             .addHandler(router.createHttpHandler())
@@ -74,6 +74,15 @@ public class RunLocal {
             router.stop();
         }));
 
+        System.out.println("Router is running. Press Enter to exit.");
+        try {
+            System.in.read();
+        } catch (Exception ignored) {}
+        System.out.println("Exiting Router cleanly...");
+        httpServer.stop();
+        registrationServer.stop();
+        router.stop();
+        System.exit(0);
     }
 
     private static class HealthHandler implements RouteHandler {

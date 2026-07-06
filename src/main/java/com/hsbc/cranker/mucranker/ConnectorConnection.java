@@ -62,7 +62,8 @@ class ConnectorConnectionImpl implements ConnectorConnection {
         if (domain != null && !"*".equals(domain)) {
             m.put("domain", domain);
         }
-        if ("cranker_3.0".equals(protocol)) {
+        if (CrankerRouterBuilder.CRANKER_PROTOCOL_3.equals(protocol)
+        || CrankerRouterBuilder.CRANKER_PROTOCOL_3_1.equals(protocol)) {
             m.put("inflight", inflight);
         }
         return m;

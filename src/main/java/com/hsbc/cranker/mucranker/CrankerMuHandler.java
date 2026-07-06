@@ -341,11 +341,15 @@ class CrankerMuHandler implements MuHandler {
         Headers reqHeaders = clientRequest.headers();
         List<String> customHopByHop = getCustomHopByHopHeaders(reqHeaders.get(HeaderNames.CONNECTION));
 
+        boolean isWsUpgrade = reqHeaders.contains(HeaderNames.UPGRADE, "websocket", true);
+
         boolean hasContentLengthOrTransferEncoding = false;
         for (Map.Entry<String, String> clientHeader : reqHeaders) {
             String key = clientHeader.getKey();
             String lowKey = key.toLowerCase();
-            if (excludedHeaders.contains(lowKey) || customHopByHop.contains(lowKey)) {
+            if (isWsUpgrade && (lowKey.equals("upgrade") || lowKey.equals("connection"))) {
+                // allow these headers for websocket upgrade
+            } else if (excludedHeaders.contains(lowKey) || customHopByHop.contains(lowKey)) {
                 continue;
             }
             hasContentLengthOrTransferEncoding |= lowKey.equals("content-length") || lowKey.equals("transfer-encoding");

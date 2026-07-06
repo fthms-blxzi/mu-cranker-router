@@ -3,7 +3,11 @@ package com.hsbc.cranker.mucranker;
 import io.muserver.MuRequest;
 import io.muserver.Mutils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -16,6 +20,26 @@ import static java.util.Collections.emptyList;
  * that you add to your own Mu Server instance.
  */
 public class CrankerRouterBuilder {
+    /**
+     * cranker protocol 1.0
+     */
+    public static final String CRANKER_PROTOCOL_1 = "cranker_1.0";
+    /**
+     * cranker protocol 3.0
+     */
+    public static final String CRANKER_PROTOCOL_3 = "cranker_3.0";
+    /**
+     * cranker protocol 3.1
+     */
+    public static final String CRANKER_PROTOCOL_3_1 = "cranker_3.1";
+
+    final static String CRANKER_PROTOCOL_PREFIX = "cranker_";
+
+    static String normalizeCrankerVersion(String version) {
+        Objects.requireNonNull(version);
+        if (version.isBlank()) throw new IllegalArgumentException("version should not be blank");
+        return CrankerRouterBuilder.CRANKER_PROTOCOL_PREFIX + version.toLowerCase().trim().replace(CrankerRouterBuilder.CRANKER_PROTOCOL_PREFIX, "");
+    }
 
     private IPValidator ipValidator = IPValidator.AllowAll;
     private boolean discardClientForwardedHeaders = false;
@@ -28,7 +52,11 @@ public class CrankerRouterBuilder {
     private long routesKeepTimeMillis = 2 * 60 * 60 * 1000L;
     private List<ProxyListener> completionListeners = emptyList();
     private RouteResolver routeResolver;
-    private List<String> supportedCrankerProtocol = List.of("1.0", "3.0");
+    private List<String> supportedCrankerProtocol = List.of(
+        CRANKER_PROTOCOL_1,
+        CRANKER_PROTOCOL_3,
+        CRANKER_PROTOCOL_3_1
+    );
     private Function<MuRequest, String> clientIpProvider = MuRequest::remoteAddress;
 
     private CrankerRouterBuilder() {}
@@ -219,8 +247,8 @@ public class CrankerRouterBuilder {
         List<String> supportedProtocols = protocols.stream()
             .filter(Objects::nonNull)
             .map(String::toLowerCase)
-            .map(it -> it.replace("cranker_", ""))
-            .filter(it -> it.equalsIgnoreCase("1.0") || it.equalsIgnoreCase("3.0"))
+            .map(CrankerRouterBuilder::normalizeCrankerVersion)
+            .filter(Set.of(CRANKER_PROTOCOL_1, CRANKER_PROTOCOL_3, CRANKER_PROTOCOL_3_1)::contains)
             .collect(Collectors.toList());
         if (supportedProtocols.isEmpty()) {
             throw new CrankerProtocol.CrankerProtocolVersionNotFoundException("protocols is empty after filter");

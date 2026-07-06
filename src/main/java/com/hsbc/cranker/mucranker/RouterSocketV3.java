@@ -1,14 +1,32 @@
 package com.hsbc.cranker.mucranker;
 
-import io.muserver.*;
+import io.muserver.AsyncHandle;
+import io.muserver.BaseWebSocket;
+import io.muserver.DoneCallback;
+import io.muserver.HeaderNames;
+import io.muserver.MuRequest;
+import io.muserver.MuResponse;
+import io.muserver.MuWebSocketSession;
+import io.muserver.Mutils;
+import io.muserver.RequestBodyListener;
+import io.muserver.WebSocketHandler;
+import io.muserver.WebSocketHandlerBuilder;
+import io.muserver.WebsocketSessionState;
+import jakarta.ws.rs.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.ws.rs.WebApplicationException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeoutException;
@@ -16,7 +34,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hsbc.cranker.mucranker.CrankerMuHandler.*;
+import static com.hsbc.cranker.mucranker.CrankerMuHandler.HOP_BY_HOP;
+import static com.hsbc.cranker.mucranker.CrankerMuHandler.createRequestLine;
+import static com.hsbc.cranker.mucranker.CrankerMuHandler.handleException;
+import static com.hsbc.cranker.mucranker.CrankerMuHandler.handleWebApplicationException;
+import static com.hsbc.cranker.mucranker.CrankerMuHandler.setTargetRequestHeaders;
 
 class RouterSocketV3 extends BaseWebSocket {
 
@@ -24,6 +46,16 @@ class RouterSocketV3 extends BaseWebSocket {
     static final byte MESSAGE_TYPE_HEADER = 1;
     static final byte MESSAGE_TYPE_RST_STREAM = 3;
     static final byte MESSAGE_TYPE_WINDOW_UPDATE = 8;
+    static final byte MESSAGE_TYPE_WEBSOCKET = 10;
+
+    static final byte WS_OPCODE_TEXT = 1;
+    static final byte WS_OPCODE_BINARY = 2;
+    static final byte WS_OPCODE_CLOSE = 8;
+    static final byte WS_OPCODE_PING = 9;
+    static final byte WS_OPCODE_PONG = 10;
+
+    static final int WS_FIN_BIT = 0x80;
+    static final int WS_OPCODE_MASK = 0x0F;
 
     static final int ERROR_INTERNAL = 1;
 
@@ -43,6 +75,7 @@ class RouterSocketV3 extends BaseWebSocket {
     private Runnable onReadyForAction;
     private InetSocketAddress remoteAddress;
     private final String clientIp;
+    private final String protocolVersion;
 
     private boolean isRemoved;
 
@@ -52,7 +85,7 @@ class RouterSocketV3 extends BaseWebSocket {
     RouterSocketV3(String route, String componentName, WebSocketFarmV3 webSocketFarmV3,
                    String remotePort, List<ProxyListener> proxyListeners,
                    boolean discardClientForwardedHeaders, boolean sendLegacyForwardedHeaders,
-                   String viaValue, Set<String> doNotProxy, String clientIp) {
+                   String viaValue, Set<String> doNotProxy, String clientIp, String protocolVersion) {
         this.webSocketFarmV3 = webSocketFarmV3;
         this.route = route;
         this.componentName = componentName;
@@ -64,6 +97,7 @@ class RouterSocketV3 extends BaseWebSocket {
         this.doNotProxy = doNotProxy;
         this.isRemoved = false;
         this.clientIp = clientIp;
+        this.protocolVersion = protocolVersion;
     }
 
     public WebsocketSessionState state() {
@@ -78,6 +112,12 @@ class RouterSocketV3 extends BaseWebSocket {
 
         final Integer requestId = idMaker.incrementAndGet();
         final AsyncHandle asyncHandle = clientRequest.handleAsync();
+
+        boolean isWsUpgrade = clientRequest.headers().contains("Upgrade", "websocket", true);
+        if (isWsUpgrade && !CrankerRouterBuilder.CRANKER_PROTOCOL_3_1.equals(getProtocol())) {
+            CrankerMuHandler.sendSimpleResponse(clientResponse, asyncHandle, 501, "501 Not Implemented", "Websocket not supported over " + getProtocol());
+            return;
+        }
 
         final RequestContext context = new RequestContext(requestId, clientRequest, clientResponse, asyncHandle);
         contextMap.put(requestId, context);
@@ -299,6 +339,13 @@ class RouterSocketV3 extends BaseWebSocket {
                 }
             }
 
+            if (context.clientSession != null) {
+                try {
+                    context.clientSession.close(statusCode, "Target closed connection");
+                } catch (Exception ignored) {
+                }
+            }
+
             if (context.response != null && !context.response.hasStartedSendingData()) {
                 if (statusCode == 1011) {
                     context.response.status(502);
@@ -357,6 +404,12 @@ class RouterSocketV3 extends BaseWebSocket {
     private void notifyClientRequestError(RequestContext context, Throwable cause) throws Exception {
         try {
             context.error = cause;
+            if (context.clientSession != null) {
+                try {
+                    context.clientSession.close(1011, "Upstream error: " + cause.getMessage());
+                } catch (Exception ignored) {
+                }
+            }
             if (cause instanceof TimeoutException) {
                 if (context.response != null && !context.response.hasStartedSendingData()) {
                     String htmlBody = "The <code>" + Mutils.htmlEncode(route) + "</code> service did not respond in time.";
@@ -403,6 +456,27 @@ class RouterSocketV3 extends BaseWebSocket {
         }
 
         context.toClientBytes.getAndAdd(content.length()); // string length should be number of bytes as this is used for headers so is ASCII
+
+        boolean isWsUpgrade = context.request.headers().contains("Upgrade", "websocket", true);
+        if (isWsUpgrade && protocolResponse.getStatus() == 101) {
+            try {
+                WebSocketHandler handler = WebSocketHandlerBuilder.webSocketHandler()
+                    .withWebSocketFactory((request, responseHeaders) -> {
+                        for (Map.Entry<String, String> header : context.response.headers()) {
+                            responseHeaders.add(header.getKey(), header.getValue());
+                        }
+                        return clientFacingServerSideWebSocket(context);
+                    })
+                    .build();
+
+                if (!handler.handle(context.request, context.response)) {
+                    resetStream(context, ERROR_INTERNAL, "Websocket upgrade request was not accepted", DoneCallback.NoOp);
+                }
+            } catch (Exception e) {
+                log.error("Failed to upgrade websocket for request id: {}", context.request, e);
+                resetStream(context, ERROR_INTERNAL, "Websocket upgrade fail: " + e.getMessage(), DoneCallback.NoOp);
+            }
+        }
     }
 
 
@@ -473,6 +547,10 @@ class RouterSocketV3 extends BaseWebSocket {
                 doneAndPullData.onComplete(null);
                 break;
             }
+            case MESSAGE_TYPE_WEBSOCKET: {
+                handleWebSocketMessage(context, flags, byteBuffer, doneAndPullData, releaseBuffer);
+                break;
+            }
             default: {
                 log.info("not supported binary message byte {}", messageType);
                 releaseBuffer.run();
@@ -492,6 +570,123 @@ class RouterSocketV3 extends BaseWebSocket {
 
     private static int getErrorCode(ByteBuffer byteBuffer) {
         return byteBuffer.remaining() >= 4 ? byteBuffer.getInt() : -1;
+    }
+
+    static ByteBuffer wrapWsPayload(int opcode, boolean isLast, Integer requestId, ByteBuffer payload) {
+        int length = payload == null ? 0 : payload.remaining();
+        ByteBuffer out = ByteBuffer.allocate(10 + length);
+        out.put(MESSAGE_TYPE_WEBSOCKET);
+        int flags = (isLast ? WS_FIN_BIT : 0) | (opcode & WS_OPCODE_MASK);
+        out.put((byte) flags);
+        out.putInt(requestId);
+        out.putInt(length);
+        if (payload != null) {
+            out.put(payload);
+        }
+        out.rewind();
+        return out;
+    }
+
+    static ByteBuffer closeMessagePayload(int statusCode, String reason) {
+        byte[] reasonBytes = reason == null ? new byte[0] : reason.getBytes(StandardCharsets.UTF_8);
+        ByteBuffer payload = ByteBuffer.allocate(2 + reasonBytes.length);
+        payload.putShort((short) statusCode);
+        payload.put(reasonBytes);
+        payload.flip();
+        return payload;
+    }
+
+    private void handleWebSocketMessage(RequestContext context, int flags, ByteBuffer byteBuffer, DoneCallback doneAndPullData, Runnable releaseBuffer) {
+        try {
+            if (context.clientSession == null | context.clientSession.state().endState()) {
+                releaseBuffer.run();
+                doneAndPullData.onComplete(null);
+                return;
+            }
+
+            boolean isLast = (flags & WS_FIN_BIT) != 0;
+            int opcode = flags & WS_OPCODE_MASK;
+
+            int payloadLength = byteBuffer.getInt();
+            int formerLimit = byteBuffer.limit();
+            byteBuffer.limit(byteBuffer.position() + payloadLength);
+            ByteBuffer payload = byteBuffer.slice();
+            byteBuffer.position(byteBuffer.limit());
+            byteBuffer.limit(formerLimit);
+
+            switch (opcode) {
+                case WS_OPCODE_TEXT: { // Text
+                    String text = StandardCharsets.UTF_8.decode(payload).toString();
+                    context.clientSession.sendText(text, isLast, error -> {
+                        releaseBuffer.run();
+                        try {
+                            doneAndPullData.onComplete(error);
+                        } catch (Exception ignored) {
+                        }
+                    });
+                    break;
+                }
+                case WS_OPCODE_BINARY: { // Binary
+                    context.clientSession.sendBinary(payload, isLast, error -> {
+                        releaseBuffer.run();
+                        try {
+                            doneAndPullData.onComplete(error);
+                        } catch (Exception ignored) {
+                        }
+                    });
+                    break;
+                }
+                case WS_OPCODE_PING: { // Ping
+                    context.clientSession.sendPing(payload, isLast, error -> {
+                        releaseBuffer.run();
+                        try {
+                            doneAndPullData.onComplete(error);
+                        } catch (Exception ignored) {
+                        }
+                    });
+                    break;
+                }
+                case WS_OPCODE_PONG: { // Pong
+                    context.clientSession.sendPong(payload, isLast, error -> {
+                        releaseBuffer.run();
+                        try {
+                            doneAndPullData.onComplete(error);
+                        } catch (Exception ignored) {
+                        }
+                    });
+                    break;
+                }
+                case WS_OPCODE_CLOSE: { // Close
+                    int statusCode = payload.remaining() >= 2 ? (payload.getShort() & 0xFFFF) : 1000;
+                    String reason = payload.remaining() > 0 ? StandardCharsets.UTF_8.decode(payload).toString() : "";
+                    try {
+                        context.clientSession.close(statusCode, reason);
+                    } catch (Exception ignored) {
+                    }
+                    releaseBuffer.run(); // FIXME: TRY AND CATCH ?
+                    try {
+                        doneAndPullData.onComplete(null);
+                    } catch (Exception ignored) {
+                    }
+                    contextMap.remove(context.requestId);
+                    break;
+                }
+                default: {
+                    log.warn("Unknown websocket proxy opcode: ", opcode);
+                    releaseBuffer.run();
+                    try {
+                        doneAndPullData.onComplete(null);
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        } catch (Throwable throwable) {
+            log.warn("Error handling proxied websocket frame", t);
+            releaseBuffer.run();
+            try {
+                doneAndPullData.onComplete(t);;
+            } catch (Exception ignored) {}
+        }
     }
 
     private void handleData(RequestContext context, boolean isLast, boolean isEnd, ByteBuffer byteBuffer, DoneCallback doneAndPullData, Runnable releaseBuffer) throws Exception {
@@ -568,7 +763,7 @@ class RouterSocketV3 extends BaseWebSocket {
     }
 
     public String getProtocol() {
-        return "cranker_3.0";
+        return protocolVersion;
     }
 
     private static void putHeadersTo(MuResponse response, CrankerProtocolResponse protocolResponse) {
@@ -686,6 +881,7 @@ class RouterSocketV3 extends BaseWebSocket {
         final public MuRequest request;
         final public MuResponse response;
         final public AsyncHandle asyncHandle;
+        public volatile MuWebSocketSession clientSession;
 
         // client
         final AtomicLong fromClientBytes = new AtomicLong();

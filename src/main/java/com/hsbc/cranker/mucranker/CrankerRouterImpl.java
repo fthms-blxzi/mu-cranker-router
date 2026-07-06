@@ -1,19 +1,29 @@
 package com.hsbc.cranker.mucranker;
 
-import io.muserver.*;
+import io.muserver.BaseWebSocket;
+import io.muserver.Headers;
+import io.muserver.Method;
+import io.muserver.MuHandler;
+import io.muserver.MuRequest;
+import io.muserver.MuWebSocket;
+import io.muserver.MuWebSocketSession;
+import io.muserver.Mutils;
+import io.muserver.WebSocketHandlerBuilder;
+import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.ForbiddenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.ws.rs.ClientErrorException;
-import jakarta.ws.rs.ForbiddenException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.hsbc.cranker.mucranker.RouterInfoImpl.getConnectorServiceList;
 import static io.muserver.ContextHandlerBuilder.context;
@@ -25,8 +35,6 @@ class CrankerRouterImpl implements CrankerRouter {
 
     private final static String CRANKER_PROTOCOL = "CrankerProtocol";
     private final static String SEC_WEBSOCKET_PROTOCOL = "Sec-WebSocket-Protocol";
-    private final static String VERSION_3 = "3.0";
-    private final static String VERSION_1 = "1.0";
 
     private final IPValidator ipValidator;
     private final WebSocketFarm webSocketFarm;
@@ -85,7 +93,8 @@ class CrankerRouterImpl implements CrankerRouter {
             .withPingSentAfterNoWritesFor((int) pingScheduleMillis, TimeUnit.MILLISECONDS)
             .withWebSocketFactory((request, responseHeaders) -> {
                 validateIpAddress(ipValidator, request);
-                String version = validateAndGetCrankerProtocolVersion(this.supportedCrankerProtocols, request); // return "3.0" or "1.0"
+                // 260704 Update: Return cranker_1.0, cranker_3.0 or cranker_3.1
+                String version = validateAndGetCrankerProtocolVersion(this.supportedCrankerProtocols, request);
                 return connectorRegisterToRouter(request, responseHeaders, version);
             });
         WebSocketHandlerBuilder deregisterHandler = webSocketHandler()
@@ -125,13 +134,13 @@ class CrankerRouterImpl implements CrankerRouter {
             .build();
     }
 
-    private MuWebSocket connectorRegisterToRouter(MuRequest request, Headers responseHeaders, String version) {
-
+    private MuWebSocket connectorRegisterToRouter(MuRequest request, Headers responseHeaders, String versionWithPrefix) {
+        // The one without prefix is only used for cranker_1.0 in "CrankerProtocol" header
+        final String versionWithoutPrefix = versionWithPrefix.replace(CrankerRouterBuilder.CRANKER_PROTOCOL_PREFIX, "");
         // only allowed to send back subProtocols which exist in request
-        final String negotiateVersion = "cranker_" + version;
         final String subProtocol = request.headers().get(SEC_WEBSOCKET_PROTOCOL);
-        if (subProtocol != null && subProtocol.contains(negotiateVersion)) {
-            responseHeaders.set(SEC_WEBSOCKET_PROTOCOL, negotiateVersion);
+        if (subProtocol != null && subProtocol.contains(versionWithPrefix)) {
+            responseHeaders.set(SEC_WEBSOCKET_PROTOCOL, versionWithPrefix);
         }
 
         String route = getRoute(request);
@@ -140,15 +149,17 @@ class CrankerRouterImpl implements CrankerRouter {
         String connectorInstanceID = request.query().get("connectorInstanceID", "unknown-" + request.remoteAddress());
         String clientIp = this.getClientIp(request);
 
-        if (VERSION_3.equals(version)) {
+        if (CrankerRouterBuilder.CRANKER_PROTOCOL_3.equals(versionWithPrefix)
+            || CrankerRouterBuilder.CRANKER_PROTOCOL_3_1.equals(versionWithPrefix)
+        ) {
             final WebSocketFarmV3 webSocketFarmV3 = webSocketFarmV3Holder.getOrCreateWebSocketFarmV3(domain);
             RouterSocketV3 routerSocketV3 = new RouterSocketV3(route, componentName, webSocketFarmV3,
                 connectorInstanceID, proxyListeners,
-                discardClientForwardedHeaders, sendLegacyForwardedHeaders, viaValue, doNotProxy, clientIp);
+                discardClientForwardedHeaders, sendLegacyForwardedHeaders, viaValue, doNotProxy, clientIp, versionWithPrefix);
             routerSocketV3.setOnReadyForAction(() -> webSocketFarmV3.addWebSocket(route, routerSocketV3));
             return routerSocketV3;
         } else {
-            responseHeaders.set("CrankerProtocol", version);
+            responseHeaders.set("CrankerProtocol", versionWithoutPrefix);
             RouterSocket routerSocket = new RouterSocket(route, componentName, webSocketFarm, connectorInstanceID, proxyListeners, clientIp);
             routerSocket.setOnReadyForAction(() -> webSocketFarm.addWebSocketAsync(route, routerSocket));
             return routerSocket;
@@ -209,7 +220,7 @@ class CrankerRouterImpl implements CrankerRouter {
         // protocol negotiation
         if (subProtocols != null) {
             for (String subProtocol : subProtocols.split(",")) {
-                final String version = subProtocol.toLowerCase().trim().replace("cranker_", "");
+                final String version = CrankerRouterBuilder.normalizeCrankerVersion(subProtocol);
                 if (supportedCrankerProtocols.contains(version)) {
                     return version;
                 }
@@ -218,10 +229,10 @@ class CrankerRouterImpl implements CrankerRouter {
 
         // legacy header support
         if (legacyProtocolHeader != null && supportedCrankerProtocols.contains(legacyProtocolHeader)) {
-            return legacyProtocolHeader;
+            return CrankerRouterBuilder.normalizeCrankerVersion(legacyProtocolHeader);
         }
 
-        throw new CrankerProtocol.CrankerProtocolVersionNotSupportedException("cranker protocol version not supported.");
+        throw new CrankerProtocol.CrankerProtocolVersionNotSupportedException("cranker protocol version not supported. provided" + Stream.of(subProtocols, legacyProtocolHeader).filter(Objects::nonNull).collect(Collectors.toList()));
     }
 
     @Override
