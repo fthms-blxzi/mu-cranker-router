@@ -62,7 +62,7 @@ public class RouterWebSocketTest {
         targetServer = muServer()
             .withHttpPort(0)
             .addHandler(WebSocketHandlerBuilder.webSocketHandler()
-                .withPath("/route-ws-service/ws")
+                .withPath("/router-ws-service/ws")
                 .withWebSocketFactory((request, responseHeaders) -> new BaseWebSocket() {
                     @Override
                     public void onConnect(MuWebSocketSession session) throws Exception {
