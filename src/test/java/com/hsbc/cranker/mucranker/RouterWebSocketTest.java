@@ -21,7 +21,7 @@ import static io.muserver.MuServerBuilder.muServer;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Disabled("Should run after the connector alpha version is published")
+// @Disabled("Should run after the connector alpha version is published")
 public class RouterWebSocketTest {
 
     private CrankerRouter crankerRouter;
@@ -43,9 +43,9 @@ public class RouterWebSocketTest {
     public void setup() {
         crankerRouter = CrankerRouterBuilder.crankerRouter()
             .withSupportedCrankerProtocols(List.of(
-                CrankerRouterBuilder.CRANKER_PROTOCOL_1,
+                CrankerRouterBuilder.CRANKER_PROTOCOL_3_1,
                 CrankerRouterBuilder.CRANKER_PROTOCOL_3,
-                CrankerRouterBuilder.CRANKER_PROTOCOL_3_1
+                CrankerRouterBuilder.CRANKER_PROTOCOL_1
             ))
             .start();
 
@@ -169,7 +169,7 @@ public class RouterWebSocketTest {
     public void testAbnormalConnectorShuttingGracefulRecovery() throws Exception {
         AssertUtils.assertEventually(() -> crankerRouter.collectInfo().services().size() > 0, is(true));
 
-        URI wsClientUri = URI.create("ws" + crankerServer.uri().toString().substring(4) + "router-ws-service/ws");
+        URI wsClientUri = URI.create("ws" + crankerServer.uri().toString().substring(4) + "/router-ws-service/ws");
 
         CompletableFuture<WebSocket> clientWsFuture = httpClient.newWebSocketBuilder()
             .buildAsync(wsClientUri, new WebSocket.Listener() {
@@ -231,7 +231,7 @@ public class RouterWebSocketTest {
     public void testMixedPayloadMultiplexing() throws Exception {
         AssertUtils.assertEventually(() -> crankerRouter.collectInfo().services().size() > 0, is(true));
 
-        URI wsClientUri = URI.create("ws" + crankerServer.uri().toString().substring(4) + "router-ws-service/ws");
+        URI wsClientUri = URI.create("ws" + crankerServer.uri().toString().substring(4) + "/router-ws-service/ws");
 
         BlockingQueue<String> wsResponseQueue = new LinkedBlockingQueue<>();
         WebSocket clientWs = httpClient.newWebSocketBuilder()
