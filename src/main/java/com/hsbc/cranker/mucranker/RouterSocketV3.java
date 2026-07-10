@@ -672,7 +672,7 @@ class RouterSocketV3 extends BaseWebSocket {
 
     private void handleWebSocketMessage(RequestContext context, int flags, ByteBuffer byteBuffer, DoneCallback doneAndPullData, Runnable releaseBuffer) {
         try {
-            if (context.clientSession == null | context.clientSession.state().endState()) {
+            if (context.clientSession == null || context.clientSession.state().endState()) {
                 releaseBuffer.run();
                 doneAndPullData.onComplete(null);
                 return;

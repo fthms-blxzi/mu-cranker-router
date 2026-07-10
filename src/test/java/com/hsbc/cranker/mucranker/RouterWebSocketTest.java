@@ -43,9 +43,9 @@ public class RouterWebSocketTest {
     public void setup() {
         crankerRouter = CrankerRouterBuilder.crankerRouter()
             .withSupportedCrankerProtocols(List.of(
-                CrankerRouterBuilder.CRANKER_PROTOCOL_3_1,
+                CrankerRouterBuilder.CRANKER_PROTOCOL_1,
                 CrankerRouterBuilder.CRANKER_PROTOCOL_3,
-                CrankerRouterBuilder.CRANKER_PROTOCOL_1
+                CrankerRouterBuilder.CRANKER_PROTOCOL_3_1
             ))
             .start();
 
@@ -265,7 +265,7 @@ public class RouterWebSocketTest {
                         .build();
                     HttpResponse<String> httpResp = httpClient.send(httpReq, HttpResponse.BodyHandlers.ofString());
                     assertEquals(200, httpResp.statusCode());
-                    assertEquals("HTTP RESPONSE: msg-" + index, httpResp.body());
+                    assertEquals("HTTP Response: msg-" + index, httpResp.body());
 
                     // Send a WS Frame concurrently with synchronization on finalWs as HttpClient WebSocket is not thread-safe for concurrent writes
                     synchronized (finalWs) {
