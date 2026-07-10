@@ -301,7 +301,7 @@ public class MultiConnectorTest {
 
         // all proxied to v3 as it's registered with domain "127.0.0.1" take higher priority
         final HashMap<String, AtomicInteger> bodyMap = callAndGroupByBody(
-            URI.create("http://127.0.0.1:{port}/my-service/hello"
+            URI.create(router.uri().getScheme() + "://127.0.0.1:{port}/my-service/hello"
                 .replace("{port}", String.valueOf(router.uri().getPort()))),
             20);
         assertThat(bodyMap.get("targetV3_1").get(), is(20));

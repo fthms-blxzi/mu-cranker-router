@@ -6,6 +6,7 @@ import io.muserver.DoneCallback;
 import io.muserver.HeaderNames;
 import io.muserver.MuRequest;
 import io.muserver.MuResponse;
+import io.muserver.MuWebSocket;
 import io.muserver.MuWebSocketSession;
 import io.muserver.Mutils;
 import io.muserver.RequestBodyListener;
@@ -479,6 +480,79 @@ class RouterSocketV3 extends BaseWebSocket {
         }
     }
 
+    private MuWebSocket clientFacingServerSideWebSocket(RequestContext context) {
+        return new MuWebSocket() {
+            @Override
+            public void onConnect(MuWebSocketSession session) throws Exception {
+                context.clientSession = session;
+            }
+
+            @Override
+            public void onText(String message, boolean isLast, DoneCallback onComplete) throws Exception {
+                byte[] utf8Bytes = message.getBytes(StandardCharsets.UTF_8);
+                ByteBuffer wrapped = wrapWsPayload(WS_OPCODE_TEXT, isLast, context.requestId, ByteBuffer.wrap(utf8Bytes));
+                sendData(wrapped, error -> {
+                    try {
+                        onComplete.onComplete(error);
+                    } catch (Exception ignored) {
+                    }
+                });
+            }
+
+            @Override
+            public void onBinary(ByteBuffer buffer, boolean isLast, DoneCallback onComplete) throws Exception {
+                ByteBuffer wrapped = wrapWsPayload(WS_OPCODE_BINARY, isLast, context.requestId, buffer);
+                sendData(wrapped, error -> {
+                    try {
+                        onComplete.onComplete(error);
+                    } catch (Exception ignored) {
+                    }
+                });
+            }
+
+            @Override
+            public void onPing(ByteBuffer payload, DoneCallback onComplete) throws Exception {
+                ByteBuffer wrapped = wrapWsPayload(WS_OPCODE_PING, true, context.requestId, payload);
+                sendData(wrapped, error -> {
+                    try {
+                        onComplete.onComplete(error);
+                    } catch (Exception ignored) {
+                    }
+                });
+            }
+
+            @Override
+            public void onPong(ByteBuffer payload, DoneCallback onComplete) throws Exception {
+                ByteBuffer wrapped = wrapWsPayload(WS_OPCODE_PONG, true, context.requestId, payload);
+                sendData(wrapped, error -> {
+                    try {
+                        onComplete.onComplete(error);
+                    } catch (Exception ignored) {
+                    }
+                });
+            }
+
+            @Override
+            public void onClientClosed(int statusCode, String reason) throws Exception {
+                ByteBuffer wrapped = wrapWsPayload(WS_OPCODE_CLOSE, true, context.requestId, closeMessagePayload(statusCode, reason));
+                sendData(wrapped, DoneCallback.NoOp);
+                try {
+                    if (context.clientSession != null) {
+                        context.clientSession.close(statusCode, reason);
+                    }
+                } catch (Exception ignored) {
+                }
+                contextMap.remove(context.requestId);
+            }
+
+            @Override
+            public void onError(Throwable cause) throws Exception {
+                log.info("Client error on websocket requestId={}", context.requestId, cause);
+                resetStream(context, ERROR_INTERNAL, "Client error: " + cause.getMessage(), DoneCallback.NoOp);
+            }
+        };
+    }
+
 
     @Override
     public void onBinary(ByteBuffer byteBuffer, boolean isLast, DoneCallback doneAndPullData, Runnable releaseBuffer) throws Exception {
@@ -637,7 +711,7 @@ class RouterSocketV3 extends BaseWebSocket {
                     break;
                 }
                 case WS_OPCODE_PING: { // Ping
-                    context.clientSession.sendPing(payload, isLast, error -> {
+                    context.clientSession.sendPing(payload, error -> {
                         releaseBuffer.run();
                         try {
                             doneAndPullData.onComplete(error);
@@ -647,7 +721,7 @@ class RouterSocketV3 extends BaseWebSocket {
                     break;
                 }
                 case WS_OPCODE_PONG: { // Pong
-                    context.clientSession.sendPong(payload, isLast, error -> {
+                    context.clientSession.sendPong(payload, error -> {
                         releaseBuffer.run();
                         try {
                             doneAndPullData.onComplete(error);
@@ -680,7 +754,7 @@ class RouterSocketV3 extends BaseWebSocket {
                     }
                 }
             }
-        } catch (Throwable throwable) {
+        } catch (Throwable t) {
             log.warn("Error handling proxied websocket frame", t);
             releaseBuffer.run();
             try {
