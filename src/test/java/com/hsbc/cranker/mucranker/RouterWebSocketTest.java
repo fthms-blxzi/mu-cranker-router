@@ -167,7 +167,7 @@ public class RouterWebSocketTest {
 
     @Test
     public void testAbnormalConnectorShuttingGracefulRecovery() throws Exception {
-        AssertUtils.assertEventually(() -> crankerRouter.collectInfo().service().size() > 0, is(true));
+        AssertUtils.assertEventually(() -> crankerRouter.collectInfo().services().size() > 0, is(true));
 
         URI wsClientUri = URI.create("ws" + crankerServer.uri().toString().substring(4) + "router-ws-service/ws");
 
@@ -229,7 +229,7 @@ public class RouterWebSocketTest {
 
     @Test
     public void testMixedPayloadMultiplexing() throws Exception {
-        AssertUtils.assertEventually(() -> crankerRouter.collectInfo().service().size() > 0, is(true));
+        AssertUtils.assertEventually(() -> crankerRouter.collectInfo().services().size() > 0, is(true));
 
         URI wsClientUri = URI.create("ws" + crankerServer.uri().toString().substring(4) + "router-ws-service/ws");
 
