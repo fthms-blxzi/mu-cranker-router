@@ -25,7 +25,7 @@ import static scaffolding.Action.swallowException;
 import static scaffolding.AssertUtils.assertEventually;
 import static scaffolding.ClientUtils.*;
 
-@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+@org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
 public class CrankerRouterRetryTest {
 
     private CrankerRouter crankerRouter;
@@ -127,5 +127,7 @@ public class CrankerRouterRetryTest {
         assertEventually(() -> crankerRouter.collectInfo().service("something").get().connectors().get(0).connections().size(), is(2));
     }
 
+    static boolean isRustAndTlsOff() {
+        return scaffolding.RustTestHelper.isRustMode() && !scaffolding.RustTestHelper.isTlsMode();
+    }
 }
-

@@ -136,7 +136,7 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+    @org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
     public void cantMakeTraceRequests() throws Exception {
         try (Response resp = call(request(router.uri().resolve("/static/hello.html")).method("TRACE", null))) {
             assertThat(resp.code(), is(405));
@@ -144,7 +144,7 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+    @org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
     public void cantMakeTraceRequestsOnWebSocketPort() throws Exception {
         try (Response resp = call(request(registrationServer.uri().resolve("/static/hello.html")).method("TRACE", null))) {
             assertThat(resp.code(), is(405));
@@ -152,7 +152,7 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+    @org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
     public void invalidRequestsWithBadQueryAreRejected() throws Exception {
         try (RawClient client = RawClient.create(router.httpUri())) {
             client.sendStartLine("GET", "/sw000.asp?|-|0|404_Object_Not_Found")
@@ -164,7 +164,7 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+    @org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
     public void invalidRequestsWithBadPathAreRejected() throws Exception {
         try (RawClient client = RawClient.create(router.httpUri())) {
             client.sendStartLine("GET", "/ca/..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\winnt/\\\\win.ini")
@@ -186,7 +186,7 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+    @org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
     public void headersAreCorrect() throws Exception {
         // based on stuff in https://www.mnot.net/blog/2011/07/11/what_proxies_must_do
 
@@ -222,4 +222,7 @@ public class HttpTest {
         assertThat(rh.get("Server"), is(nullValue())); // Some say exposing info about the Server is a security risk
     }
 
+    static boolean isRustAndTlsOff() {
+        return scaffolding.RustTestHelper.isRustMode() && !scaffolding.RustTestHelper.isTlsMode();
+    }
 }

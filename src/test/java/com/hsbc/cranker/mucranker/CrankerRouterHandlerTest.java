@@ -30,7 +30,7 @@ import static scaffolding.Action.swallowException;
 import static scaffolding.ClientUtils.call;
 import static scaffolding.ClientUtils.request;
 
-@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+@org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
 public class CrankerRouterHandlerTest {
 
     private CrankerRouter router;
@@ -274,6 +274,10 @@ public class CrankerRouterHandlerTest {
 
     private CrankerConnector startConnector(String targetServiceName, List<String> preferredProtocols) {
         return startConnectorAndWaitForRegistration(router, "*", target, preferredProtocols, targetServiceName, registrationServer);
+    }
+
+    static boolean isRustAndTlsOff() {
+        return scaffolding.RustTestHelper.isRustMode() && !scaffolding.RustTestHelper.isTlsMode();
     }
 
 }
