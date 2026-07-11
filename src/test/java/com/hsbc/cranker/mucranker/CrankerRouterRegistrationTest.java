@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,7 +27,6 @@ import static scaffolding.Action.swallowException;
 import static scaffolding.ClientUtils.call;
 import static scaffolding.ClientUtils.request;
 
-@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
 public class CrankerRouterRegistrationTest {
 
     private CrankerRouter crankerRouter;
@@ -68,6 +68,7 @@ public class CrankerRouterRegistrationTest {
     }
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode")
     public void canMapRouteWithStashWhenUsingLongFirstRouteResolver(RepetitionInfo repetitionInfo) throws IOException {
 
         crankerRouter = crankerRouter()
@@ -98,6 +99,7 @@ public class CrankerRouterRegistrationTest {
     }
 
     @Test
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode")
     public void canUseCustomizedIpProviderToKnowClientIp() {
         String forValue = "126.0.0.0";
         ForwardedHeader forwardedHeader = new ForwardedHeader("125.0.0.0", forValue, "forwarded.example.org", "http", null);
@@ -132,6 +134,7 @@ public class CrankerRouterRegistrationTest {
     }
 
     @Test
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode")
     public void canUseDefaultMethodToGetClientIp() {
         String forValue = "126.0.0.0";
         ForwardedHeader forwardedHeader = new ForwardedHeader("125.0.0.0", forValue, "forwarded.example.org", "http", null);

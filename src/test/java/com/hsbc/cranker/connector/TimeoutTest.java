@@ -17,6 +17,7 @@ import okhttp3.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
+import org.junit.jupiter.api.condition.DisabledIf;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -179,7 +180,7 @@ public class TimeoutTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode")
     public void ifClientDisconnectedBeforeResponseStartThenProxyListenersShouldInvoke(RepetitionInfo repetitionInfo) throws InterruptedException {
         AtomicReference<ProxyInfo> ref = new AtomicReference<>();
         CountDownLatch countDownLatch = new CountDownLatch(1);
