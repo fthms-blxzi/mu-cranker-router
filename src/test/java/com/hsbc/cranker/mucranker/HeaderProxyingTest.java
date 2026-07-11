@@ -7,6 +7,7 @@ import okhttp3.*;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import scaffolding.ClientUtils;
 import scaffolding.InMemCookieJar;
 
@@ -26,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static scaffolding.ClientUtils.*;
 
-@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+@DisabledIf("scaffolding.RustTestHelper#isRustMode")
 public class HeaderProxyingTest extends BaseEndToEndTest {
 
     @RepeatedTest(3)

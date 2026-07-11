@@ -78,17 +78,17 @@ public class CrankerRouterCleanTest {
 
         // assert route info clear before de-register
         assertEventually(() -> {
-            boolean isRustMode = scaffolding.RustTestHelper.isRustMode();
-            if (isRustMode) {
-                return crankerRouter.collectInfo().service("something").isPresent();
-            } else {
+//            boolean isRustMode = scaffolding.RustTestHelper.isRustMode();
+//            if (isRustMode) {
+//                return crankerRouter.collectInfo().service("something").isPresent();
+//            } else {
                 try (Response resp = client.newCall(request(router.uri().resolve("/health/connectors")).build()).execute()) {
                     assertThat(resp.code(), is(200));
                     assert resp.body() != null;
                     final JSONObject servicesJson = new JSONObject(resp.body().string()).getJSONObject("services");
                     return servicesJson.has("something");
                 }
-            }
+//            }
         }, is(true));
 
         // shutdown connector, which causing WebSocketFarm do retry
@@ -96,17 +96,17 @@ public class CrankerRouterCleanTest {
 
         // assert route info clear after de-register
         assertEventually(() -> {
-            boolean isRustMode = scaffolding.RustTestHelper.isRustMode();
-            if (isRustMode) {
-                return crankerRouter.collectInfo().service("something").isPresent();
-            } else {
+//            boolean isRustMode = scaffolding.RustTestHelper.isRustMode();
+//            if (isRustMode) {
+//                return crankerRouter.collectInfo().service("something").isPresent();
+//            } else {
                 try (Response resp = client.newCall(request(router.uri().resolve("/health/connectors")).build()).execute()) {
                     assertThat(resp.code(), is(200));
                     assert resp.body() != null;
                     final JSONObject servicesJson = new JSONObject(resp.body().string()).getJSONObject("services");
                     return servicesJson.has("something");
                 }
-            }
+//            }
         }, is(false));
 
         // assert client will get 404

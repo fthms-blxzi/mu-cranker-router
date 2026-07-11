@@ -4,6 +4,7 @@ import io.muserver.Method;
 import okhttp3.Response;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
+import org.junit.jupiter.api.condition.DisabledIf;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,7 +16,7 @@ import static org.hamcrest.Matchers.is;
 import static scaffolding.ClientUtils.call;
 import static scaffolding.ClientUtils.request;
 
-@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+@DisabledIf("scaffolding.RustTestHelper#isRustMode")
 public class IPValidationTest extends BaseEndToEndTest {
 
     @RepeatedTest(3)

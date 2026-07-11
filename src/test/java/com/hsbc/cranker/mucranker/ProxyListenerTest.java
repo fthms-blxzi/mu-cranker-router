@@ -10,6 +10,7 @@ import okhttp3.Response;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scaffolding.ClientUtils;
@@ -34,7 +35,7 @@ import static scaffolding.AssertUtils.assertEventually;
 import static scaffolding.ClientUtils.call;
 import static scaffolding.ClientUtils.request;
 
-@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+@DisabledIf("scaffolding.RustTestHelper#isRustMode")
 public class ProxyListenerTest extends BaseEndToEndTest {
 
     private static final Logger log = LoggerFactory.getLogger(ProxyListenerTest.class);

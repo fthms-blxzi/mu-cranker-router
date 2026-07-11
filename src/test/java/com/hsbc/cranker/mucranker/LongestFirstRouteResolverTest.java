@@ -8,6 +8,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 
 import java.io.IOException;
 import java.net.URI;
@@ -24,7 +25,7 @@ import static scaffolding.TestServerBuilder.httpServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@org.junit.jupiter.api.condition.DisabledIfSystemProperty(named = "cranker.router.rust", matches = "true")
+@DisabledIf("scaffolding.RustTestHelper#isRustMode")
 public class LongestFirstRouteResolverTest {
 
     private HttpClient client = CrankerConnectorBuilder.createHttpClient(true).build();

@@ -96,7 +96,7 @@ public class RouterInfoTest {
     public void infoIsExposedAsAMapForSimpleHealthReporting(RepetitionInfo repetitionInfo) throws IOException {
         router = crankerRouter().withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0")).start();
         routerServer = httpsServer()
-                .addHandler(Method.GET, "/health",
+                .addHandler(Method.GET, "/health/connectors",
                         (req, resp, pathParams) -> {
                             resp.contentType("application/json");
                             JSONObject health = new JSONObject()
@@ -122,17 +122,8 @@ public class RouterInfoTest {
 
         call(request(routerServer.uri().resolve("/my-target-server/"))).close();
 
-        java.net.URI healthUri;
-        boolean isRustMode = scaffolding.RustTestHelper.isRustMode();
-        if (isRustMode) {
-            healthUri = routerServer.uri().resolve("/health/connectors");
-        } else {
-            healthUri = routerServer.uri().resolve("/health");
-        }
-        try (Response resp = call(request(healthUri))) {
-            String resStr = resp.body().string();
-            System.err.println("################" + resStr + "###################");
-            JSONObject health = new JSONObject(resStr);
+        try (Response resp = call(request(routerServer.uri().resolve("/health")))) {
+            JSONObject health = new JSONObject(resp.body().string());
             JSONObject services = health.getJSONObject("services");
             assertThat(services.has("my-target-server"), is(true));
             assertThat(services.has("another-target-server"), is(true));
@@ -158,7 +149,7 @@ public class RouterInfoTest {
     public void infoIsExposedAsAMapForSimpleHealthReportingForBothV1AndV3() throws IOException {
         router = crankerRouter().withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0")).start();
         routerServer = httpsServer()
-                .addHandler(Method.GET, "/health",
+                .addHandler(Method.GET, "/health/connectors",
                         (req, resp, pathParams) -> {
                             resp.contentType("application/json");
                             JSONObject health = new JSONObject()
@@ -183,14 +174,7 @@ public class RouterInfoTest {
         connector2 = startConnector("my-target-server", List.of(CRANKER_PROTOCOL_3));
 
         call(request(routerServer.uri().resolve("/my-target-server/"))).close();
-        java.net.URI healthUri;
-        boolean isRustMode = scaffolding.RustTestHelper.isRustMode();
-        if (isRustMode) {
-            healthUri = routerServer.uri().resolve("/health/connectors");
-        } else {
-            healthUri = routerServer.uri().resolve("/health");
-        }
-        try (Response resp = call(request(healthUri))) {
+        try (Response resp = call(request(routerServer.uri().resolve("/health")))) {
             JSONObject health = new JSONObject(resp.body().string());
             JSONObject services = health.getJSONObject("services");
             assertThat(services.has("my-target-server"), is(true));
