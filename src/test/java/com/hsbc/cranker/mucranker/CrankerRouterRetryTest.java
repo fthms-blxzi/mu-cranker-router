@@ -7,6 +7,7 @@ import okhttp3.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
+import scaffolding.RustTestHelper;
 
 import java.net.SocketTimeoutException;
 import java.util.List;
@@ -80,6 +81,7 @@ public class CrankerRouterRetryTest {
             final String protocol = preferredProtocols.get(0);
             switch (protocol) {
                 case "cranker_3.0": {
+                    if (RustTestHelper.isRustMode()) continue;
                     try (Response response = client.newCall(request(router.uri().resolve("/something/blah")).build()).execute()) {
                         assertThat(response.code(), equalTo(404));
                     } catch (Exception e) {

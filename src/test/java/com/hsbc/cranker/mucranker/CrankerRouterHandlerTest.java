@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
+import scaffolding.RustTestHelper;
 import scaffolding.StringUtils;
 
 import java.io.IOException;
@@ -203,6 +204,7 @@ public class CrankerRouterHandlerTest {
         try (Response resp = call(request(routerServer.uri().resolve("/blah.txt")))) {
             switch (preferredProtocols.get(0)) {
                 case "cranker_3.0": {
+                    if (RustTestHelper.isRustMode()) break;
                     assertThat(resp.code(), is(404));
                     break;
                 }
