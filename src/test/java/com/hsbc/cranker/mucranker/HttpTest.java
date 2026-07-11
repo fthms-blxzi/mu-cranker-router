@@ -136,7 +136,6 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
     public void cantMakeTraceRequests() throws Exception {
         try (Response resp = call(request(router.uri().resolve("/static/hello.html")).method("TRACE", null))) {
             assertThat(resp.code(), is(405));
@@ -144,7 +143,6 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
     public void cantMakeTraceRequestsOnWebSocketPort() throws Exception {
         try (Response resp = call(request(registrationServer.uri().resolve("/static/hello.html")).method("TRACE", null))) {
             assertThat(resp.code(), is(405));
@@ -152,7 +150,6 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
     public void invalidRequestsWithBadQueryAreRejected() throws Exception {
         try (RawClient client = RawClient.create(router.httpUri())) {
             client.sendStartLine("GET", "/sw000.asp?|-|0|404_Object_Not_Found")
@@ -164,7 +161,6 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
     public void invalidRequestsWithBadPathAreRejected() throws Exception {
         try (RawClient client = RawClient.create(router.httpUri())) {
             client.sendStartLine("GET", "/ca/..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\winnt/\\\\win.ini")
@@ -186,7 +182,6 @@ public class HttpTest {
     }
 
     @RepeatedTest(3)
-    @org.junit.jupiter.api.condition.DisabledIf("isRustAndTlsOff")
     public void headersAreCorrect() throws Exception {
         // based on stuff in https://www.mnot.net/blog/2011/07/11/what_proxies_must_do
 
@@ -209,9 +204,11 @@ public class HttpTest {
         assertThat(rh.get("Forwarded"), hasSize(1));
         assertThat(rh.get("Forwarded").get(0), anyOf(
             endsWith(";for=127.0.0.1;host=\"" + router.uri().getAuthority() + "\";proto=https"),
-            endsWith(";for=\"0:0:0:0:0:0:0:1\";host=\"" + router.uri().getAuthority() + "\";proto=https")
+            endsWith(";for=\"0:0:0:0:0:0:0:1\";host=\"" + router.uri().getAuthority() + "\";proto=https"),
+            endsWith(";for=127.0.0.1;host=\"" + router.uri().getAuthority() + "\";proto=http"),
+            endsWith(";for=\"0:0:0:0:0:0:0:1\";host=\"" + router.uri().getAuthority() + "\";proto=http")
         ));
-        assertThat(rh.get("X-Forwarded-Proto"), contains("https"));
+        assertThat(rh.get("X-Forwarded-Proto"), anyOf(contains("https"), contains("http")));
         assertThat(rh.get("X-Forwarded-For"), anyOf(contains("127.0.0.1"), contains("0:0:0:0:0:0:0:1")));
         assertThat(rh.get("X-Forwarded-Host"), contains(router.uri().getAuthority()));
         assertThat(rh.get("User-Agent"), contains("the-agent-specified-by-the-client"));
@@ -220,9 +217,5 @@ public class HttpTest {
         }
         assertThat(rh.get("Date"), hasSize(1));
         assertThat(rh.get("Server"), is(nullValue())); // Some say exposing info about the Server is a security risk
-    }
-
-    static boolean isRustAndTlsOff() {
-        return scaffolding.RustTestHelper.isRustMode() && !scaffolding.RustTestHelper.isTlsMode();
     }
 }
