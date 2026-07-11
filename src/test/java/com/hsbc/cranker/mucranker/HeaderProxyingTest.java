@@ -30,7 +30,6 @@ import static scaffolding.ClientUtils.*;
 public class HeaderProxyingTest extends BaseEndToEndTest {
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void viaNameIsSetCorrectly(RepetitionInfo repetitionInfo) throws IOException {
         assumeTrue(ClientUtils.jdkHttpClientSupportsHeader("via"), "This version of the JDK HTTP client does not allow the Via header to be set so skipping test");
         this.targetServer = httpServer()
@@ -108,7 +107,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void multipleCookiesCanBeSentAndReceived(RepetitionInfo repetitionInfo) throws IOException {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/make", (request, response, pathParams) -> {
@@ -149,7 +147,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void forwardedHeadersSentFromTheClientCanBeDiscarded(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -171,7 +168,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void hostIsProxiedByForwardHeader(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -193,7 +189,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void hostIsProxiedByForwardHeaderAndLegacyForwardedHeaders(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -222,7 +217,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
 
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void hostIsProxiedByForwardHeaderAndLegacyForwardedHeaders_IfForwardHeaderAlreadyExist(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -262,7 +256,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
 
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void proxyingOfHostHeaderCanBeTurnedOff(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -279,7 +272,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void legacyForwardedHeadersAreNotSentByDefault(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -295,7 +287,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void legacyForwardedHeadersCanBeSent(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -311,7 +302,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void legacyForwardedHeadersCanBeSentAlsoWhenSomeProvidedByRequester(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
