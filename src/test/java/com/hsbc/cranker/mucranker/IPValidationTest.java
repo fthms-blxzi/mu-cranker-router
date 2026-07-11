@@ -8,7 +8,7 @@ import org.junit.jupiter.api.RepetitionInfo;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
+import static scaffolding.TestServerBuilder.crankerRouter;
 import static scaffolding.TestServerBuilder.httpServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -49,3 +49,4 @@ public class IPValidationTest extends BaseEndToEndTest {
     }
 
 }
+

@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hsbc.cranker.connector.ConnectorSocket.State.IDLE;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.preferredProtocols;
-import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
+import static scaffolding.TestServerBuilder.crankerRouter;
 import static scaffolding.TestServerBuilder.httpServer;
 import static scaffolding.TestServerBuilder.httpsServer;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -225,3 +225,4 @@ public class TimeoutTest {
     }
 
 }
+

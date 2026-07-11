@@ -12,7 +12,7 @@ import scaffolding.SseTestClient;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
+import static scaffolding.TestServerBuilder.crankerRouter;
 import static scaffolding.TestServerBuilder.httpServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -129,3 +129,4 @@ public class ServerSentEventTest extends BaseEndToEndTest {
     }
 
 }
+

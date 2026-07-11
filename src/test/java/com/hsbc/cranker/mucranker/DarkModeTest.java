@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.httpsServerForTest;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.preferredProtocols;
-import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
+import static scaffolding.TestServerBuilder.crankerRouter;
 import static scaffolding.TestServerBuilder.httpServer;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -136,3 +136,4 @@ public class DarkModeTest {
     }
 
 }
+

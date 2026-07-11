@@ -5,7 +5,7 @@ import io.muserver.MuServer;
 import okhttp3.Response;
 import org.junit.jupiter.api.Test;
 import java.util.List;
-import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
+import static scaffolding.TestServerBuilder.crankerRouter;
 import static scaffolding.TestServerBuilder.httpServer;
 import static scaffolding.TestServerBuilder.httpsServer;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -57,3 +57,4 @@ public class RustCrankerRouterPoCTest {
         }
     }
 }
+

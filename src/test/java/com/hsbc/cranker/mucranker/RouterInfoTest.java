@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hsbc.cranker.connector.CrankerConnectorBuilder.CRANKER_PROTOCOL_1;
 import static com.hsbc.cranker.connector.CrankerConnectorBuilder.CRANKER_PROTOCOL_3;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.preferredProtocols;
-import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
+import static scaffolding.TestServerBuilder.crankerRouter;
 import static scaffolding.TestServerBuilder.httpServer;
 import static scaffolding.TestServerBuilder.httpsServer;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -123,7 +123,7 @@ public class RouterInfoTest {
         call(request(routerServer.uri().resolve("/my-target-server/"))).close();
 
         java.net.URI healthUri;
-        boolean isRustMode = Boolean.getBoolean("cranker.router.rust") || "true".equalsIgnoreCase(System.getenv("CRANKER_ROUTER_RUST"));
+        boolean isRustMode = scaffolding.RustTestHelper.isRustMode();
         if (isRustMode) {
             healthUri = routerServer.uri().resolve("/health/connectors");
         } else {
@@ -184,7 +184,7 @@ public class RouterInfoTest {
 
         call(request(routerServer.uri().resolve("/my-target-server/"))).close();
         java.net.URI healthUri;
-        boolean isRustMode = Boolean.getBoolean("cranker.router.rust") || "true".equalsIgnoreCase(System.getenv("CRANKER_ROUTER_RUST"));
+        boolean isRustMode = scaffolding.RustTestHelper.isRustMode();
         if (isRustMode) {
             healthUri = routerServer.uri().resolve("/health/connectors");
         } else {
@@ -231,3 +231,4 @@ public class RouterInfoTest {
     }
 
 }
+

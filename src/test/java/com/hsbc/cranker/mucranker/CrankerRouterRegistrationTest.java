@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.hsbc.cranker.connector.CrankerConnectorBuilder.CRANKER_PROTOCOL_3;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.httpsServerForTest;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.preferredProtocols;
-import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
+import static scaffolding.TestServerBuilder.crankerRouter;
 import static scaffolding.TestServerBuilder.httpServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -168,3 +168,4 @@ public class CrankerRouterRegistrationTest {
         return BaseEndToEndTest.startConnectorAndWaitForRegistration(crankerRouter, "*", target, preferredProtocols, targetServiceName, router);
     }
 }
+

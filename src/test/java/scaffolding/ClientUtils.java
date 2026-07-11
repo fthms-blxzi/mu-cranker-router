@@ -61,7 +61,7 @@ public class ClientUtils {
 
     public static Request.Builder request() {
         Request.Builder builder = new Request.Builder();
-        boolean isRustMode = Boolean.getBoolean("cranker.router.rust") || "true".equalsIgnoreCase(System.getenv("CRANKER_ROUTER_RUST"));
+        boolean isRustMode = scaffolding.RustTestHelper.isRustMode();
         if (isRustMode) {
             builder.header("Connection", "close");
         }
@@ -127,3 +127,4 @@ public class ClientUtils {
         }
     }
 }
+

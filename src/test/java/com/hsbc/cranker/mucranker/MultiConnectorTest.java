@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.callAndGroupByBody;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.httpsServerForTest;
-import static com.hsbc.cranker.mucranker.CrankerRouterBuilder.crankerRouter;
+import static scaffolding.TestServerBuilder.crankerRouter;
 import static scaffolding.TestServerBuilder.httpServer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -333,3 +333,4 @@ public class MultiConnectorTest {
         return BaseEndToEndTest.startConnectorAndWaitForRegistration(crankerRouter, domain, target, preferredProtocols, route, router);
     }
 }
+
