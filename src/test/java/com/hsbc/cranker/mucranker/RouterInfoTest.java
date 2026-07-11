@@ -122,7 +122,7 @@ public class RouterInfoTest {
 
         call(request(routerServer.uri().resolve("/my-target-server/"))).close();
 
-        try (Response resp = call(request(routerServer.uri().resolve("/health")))) {
+        try (Response resp = call(request(routerServer.uri().resolve("/health/connectors")))) {
             JSONObject health = new JSONObject(resp.body().string());
             JSONObject services = health.getJSONObject("services");
             assertThat(services.has("my-target-server"), is(true));
@@ -174,7 +174,7 @@ public class RouterInfoTest {
         connector2 = startConnector("my-target-server", List.of(CRANKER_PROTOCOL_3));
 
         call(request(routerServer.uri().resolve("/my-target-server/"))).close();
-        try (Response resp = call(request(routerServer.uri().resolve("/health")))) {
+        try (Response resp = call(request(routerServer.uri().resolve("/health/connectors")))) {
             JSONObject health = new JSONObject(resp.body().string());
             JSONObject services = health.getJSONObject("services");
             assertThat(services.has("my-target-server"), is(true));
