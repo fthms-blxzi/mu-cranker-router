@@ -27,10 +27,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static scaffolding.ClientUtils.*;
 
-@DisabledIf("scaffolding.RustTestHelper#isRustMode")
 public class HeaderProxyingTest extends BaseEndToEndTest {
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void viaNameIsSetCorrectly(RepetitionInfo repetitionInfo) throws IOException {
         assumeTrue(ClientUtils.jdkHttpClientSupportsHeader("via"), "This version of the JDK HTTP client does not allow the Via header to be set so skipping test");
         this.targetServer = httpServer()
@@ -108,6 +108,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void multipleCookiesCanBeSentAndReceived(RepetitionInfo repetitionInfo) throws IOException {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/make", (request, response, pathParams) -> {
@@ -130,6 +131,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
         client.newCall(request(router.uri().resolve("/make")).build()).execute().close();
         List<Cookie> cookies = client.cookieJar().loadForRequest(HttpUrl.get(router.uri()));
         assertThat(cookies.size(), is(2));
+        System.err.println("cookies: " + cookies); // FIXME: Not the same order, in rust router 2 first then 1
         assertThat(cookies.get(0).value(), is("1"));
         assertThat(cookies.get(1).value(), is("2"));
 
@@ -147,6 +149,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void forwardedHeadersSentFromTheClientCanBeDiscarded(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -168,6 +171,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void hostIsProxiedByForwardHeader(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -189,6 +193,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void hostIsProxiedByForwardHeaderAndLegacyForwardedHeaders(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -217,6 +222,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
 
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void hostIsProxiedByForwardHeaderAndLegacyForwardedHeaders_IfForwardHeaderAlreadyExist(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -256,6 +262,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
 
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void proxyingOfHostHeaderCanBeTurnedOff(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -272,6 +279,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void legacyForwardedHeadersAreNotSentByDefault(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -287,6 +295,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void legacyForwardedHeadersCanBeSent(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
@@ -302,6 +311,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
     }
 
     @RepeatedTest(3)
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // FIXME
     public void legacyForwardedHeadersCanBeSentAlsoWhenSomeProvidedByRequester(RepetitionInfo repetitionInfo) throws Exception {
         this.targetServer = httpServer()
             .addHandler(Method.GET, "/", (request, response, pathParams) -> {
