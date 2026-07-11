@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import scaffolding.ClientUtils;
 import scaffolding.InMemCookieJar;
 
+import scaffolding.TestCrankerRouterBuilder;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -228,7 +230,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
             })
             .start();
 
-        final CrankerRouterBuilder crankerBuilder = crankerRouter()
+        final TestCrankerRouterBuilder crankerBuilder = crankerRouter()
             .withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0"))
             .withDiscardClientForwardedHeaders(false)
             .proxyHostHeader(false)

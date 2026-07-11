@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import scaffolding.AssertUtils;
 import scaffolding.TestServerBuilder;
 
+import scaffolding.TestCrankerRouterBuilder;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
@@ -52,7 +54,7 @@ public abstract class BaseEndToEndTest {
         if (router != null) swallowException(router::stop);
     }
 
-    void startRouterAndConnector(CrankerRouterBuilder crankerRouterBuilder, List<String> preferredProtocols) {
+    void startRouterAndConnector(TestCrankerRouterBuilder crankerRouterBuilder, List<String> preferredProtocols) {
         this.crankerRouter = crankerRouterBuilder.start();
         this.router = httpsServerForTest()
                 .addHandler(crankerRouter.createRegistrationHandler())

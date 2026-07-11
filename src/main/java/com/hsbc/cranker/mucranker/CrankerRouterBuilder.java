@@ -247,24 +247,6 @@ public class CrankerRouterBuilder {
      * @return A newly created CrankerRouter object
      */
     public CrankerRouter start() {
-        boolean isRust = Boolean.getBoolean("cranker.router.rust") || "true".equalsIgnoreCase(System.getenv("CRANKER_ROUTER_RUST"));
-        if (isRust) {
-            try {
-                return (CrankerRouter) Class.forName("com.hsbc.cranker.mucranker.RustCrankerRouter")
-                    .getConstructor(
-                        IPValidator.class, boolean.class, boolean.class, String.class, Set.class,
-                        long.class, long.class, long.class, long.class, List.class, RouteResolver.class,
-                        List.class, java.util.function.Function.class
-                    )
-                    .newInstance(
-                        ipValidator, discardClientForwardedHeaders, sendLegacyForwardedHeaders, viaValue, doNotProxyHeaders,
-                        maxWaitInMillis, pingAfterWriteMillis, idleReadTimeoutMills, routesKeepTimeMillis,
-                        completionListeners, routeResolver, supportedCrankerProtocol, clientIpProvider
-                    );
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to instantiate RustCrankerRouter via reflection", e);
-            }
-        }
         Set<String> doNotProxy = new HashSet<>(CrankerMuHandler.REPRESSED);
         doNotProxyHeaders.forEach(h -> doNotProxy.add(h.toLowerCase()));
         if (routeResolver == null) routeResolver = new RouteResolver() {};
