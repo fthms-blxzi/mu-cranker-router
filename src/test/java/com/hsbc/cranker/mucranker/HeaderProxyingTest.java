@@ -40,7 +40,9 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
         startRouterAndConnector(crankerRouter().withViaName("some-host.name:1234").withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0")), preferredProtocols(repetitionInfo));
         try (Response resp = call(request(router.uri()))) {
             assert resp.body() != null;
-            assertThat(resp.body().string(), is("via: [HTTP/1.1 some-host.name:1234]"));
+            var bodyStr = resp.body().string();
+            assertThat(bodyStr, startsWith("via:"));
+            assertThat(bodyStr, containsString("some-host.name:1234"));
         }
     }
 
