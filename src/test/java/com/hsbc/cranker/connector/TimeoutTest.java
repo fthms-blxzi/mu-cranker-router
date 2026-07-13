@@ -10,14 +10,17 @@ import com.hsbc.cranker.mucranker.BaseEndToEndTest;
 import com.hsbc.cranker.mucranker.CrankerRouter;
 import com.hsbc.cranker.mucranker.ProxyInfo;
 import com.hsbc.cranker.mucranker.ProxyListener;
+import io.muserver.Http2ConfigBuilder;
 import io.muserver.Method;
 import io.muserver.MuServer;
 import io.muserver.ResponseState;
 import okhttp3.Response;
+import okhttp3.internal.http2.StreamResetException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.condition.DisabledIf;
+import scaffolding.RustTestHelper;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -33,16 +36,20 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hsbc.cranker.connector.ConnectorSocket.State.IDLE;
 import static com.hsbc.cranker.mucranker.BaseEndToEndTest.preferredProtocols;
-import static scaffolding.TestServerBuilder.crankerRouter;
-import static scaffolding.TestServerBuilder.httpServer;
-import static scaffolding.TestServerBuilder.httpsServer;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.fail;
 import static scaffolding.Action.swallowException;
 import static scaffolding.AssertUtils.assertEventually;
 import static scaffolding.ClientUtils.call;
 import static scaffolding.ClientUtils.request;
+import static scaffolding.TestServerBuilder.crankerRouter;
+import static scaffolding.TestServerBuilder.httpServer;
+import static scaffolding.TestServerBuilder.httpsServer;
 
 public class TimeoutTest {
 
@@ -86,13 +93,20 @@ public class TimeoutTest {
 
     @RepeatedTest(3)
     public void ifTheIdleTimeoutIsExceededAfterResponseStartedThenConnectionIsClosed(RepetitionInfo repetitionInfo) {
+        // FIXME: This test requires the router http server is http2 disabled
+        //  otherwise the IOException thrown will not be an EOFException, but instead a StreamResetException
+        //  By default mu-server doesn't enable http2
+        //  This is an okhttp behaviour, may subject to change in the future okhttp version
+        var doHttp2 = doHttp2OrNot(repetitionInfo);
         router = crankerRouter()
             .withIdleTimeout(1450, TimeUnit.MILLISECONDS)
             .withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0"))
+            .withHttp2(doHttp2)
             .start();
         routerServer = httpsServer()
             .addHandler(router.createRegistrationHandler())
             .addHandler(router.createHttpHandler())
+                .withHttp2Config(Http2ConfigBuilder.http2Config().enabled(doHttp2))
             .start();
 
         target = httpServer()
@@ -110,10 +124,18 @@ public class TimeoutTest {
             resp.body().string();
             fail("should throw exception already.");
         } catch (IOException expected) {
-            assertThat(expected instanceof EOFException, is(true));
+            if (doHttp2
+                    && // axum/hyper doesn't support HTTP/2 cleartext mode (h2c), so only with TLS enabled will upgrade to HTTP/2
+                    RustTestHelper.isTlsMode()
+            ) {
+                assertInstanceOf(StreamResetException.class, expected);
+            } else assertInstanceOf(EOFException.class, expected);
         }
     }
 
+    private static boolean doHttp2OrNot(RepetitionInfo repetitionInfo) {
+        return repetitionInfo.getCurrentRepetition() % 2 == 0;
+    }
 
     @RepeatedTest(3)
     public void ifTheConnectorDisconnectsWithoutGracefulShutdownItIsEventuallyDetected(RepetitionInfo repetitionInfo) throws Exception {
