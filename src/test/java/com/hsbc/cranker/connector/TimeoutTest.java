@@ -91,7 +91,7 @@ public class TimeoutTest {
         }
     }
 
-    @RepeatedTest(3)
+    @RepeatedTest(6)
     public void ifTheIdleTimeoutIsExceededAfterResponseStartedThenConnectionIsClosed(RepetitionInfo repetitionInfo) {
         // FIXME: This test requires the router http server is http2 disabled
         //  otherwise the IOException thrown will not be an EOFException, but instead a StreamResetException
@@ -106,7 +106,7 @@ public class TimeoutTest {
         routerServer = httpsServer()
             .addHandler(router.createRegistrationHandler())
             .addHandler(router.createHttpHandler())
-                .withHttp2Config(Http2ConfigBuilder.http2Config().enabled(doHttp2))
+            .withHttp2Config(Http2ConfigBuilder.http2Config().enabled(doHttp2))
             .start();
 
         target = httpServer()
@@ -128,12 +128,15 @@ public class TimeoutTest {
             resp.body().string();
             fail("should throw exception already.");
         } catch (IOException expected) {
-            if (doHttp2
-                    && // axum/hyper doesn't support HTTP/2 cleartext mode (h2c), so only with TLS enabled will upgrade to HTTP/2
-                    RustTestHelper.isTlsMode()
-            ) {
+            if (!doHttp2 || (RustTestHelper.isRustMode() && !RustTestHelper.isTlsMode())) {
+                // FIXME: If we do HTTP/2 but in non tls mode (http scheme url)
+                //  since axum/hyper doesn't support cleartext HTTP/2 (h2c)
+                //  it will fallback to HTTP/1.1 so it will be a normal
+                //  EOFException for HTTP/1.1
+                assertInstanceOf(EOFException.class, expected);
+            } else {
                 assertInstanceOf(StreamResetException.class, expected);
-            } else assertInstanceOf(EOFException.class, expected);
+            }
         }
     }
 

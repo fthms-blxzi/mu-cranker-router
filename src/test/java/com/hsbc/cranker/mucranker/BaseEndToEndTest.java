@@ -124,8 +124,8 @@ public abstract class BaseEndToEndTest {
 
     public static List<String> preferredProtocols(RepetitionInfo repetitionInfo) {
         final int currentRepetition = repetitionInfo.getCurrentRepetition();
-        switch (currentRepetition) {
-            case 1:
+        switch (currentRepetition % 3) {
+            case  1:
                 return List.of(CRANKER_PROTOCOL_1);
             case 2:
                 return List.of(CRANKER_PROTOCOL_3);
