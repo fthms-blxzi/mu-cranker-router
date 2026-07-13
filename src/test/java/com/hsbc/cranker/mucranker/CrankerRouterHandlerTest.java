@@ -2,6 +2,7 @@ package com.hsbc.cranker.mucranker;
 
 import com.hsbc.cranker.connector.CrankerConnector;
 import io.muserver.ContentTypes;
+import io.muserver.Http2ConfigBuilder;
 import io.muserver.Method;
 import io.muserver.MuServer;
 import okhttp3.MediaType;
@@ -74,10 +75,22 @@ public class CrankerRouterHandlerTest {
             })
             .start();
         connector = startConnector("my-target-server", preferredProtocols(repetitionInfo));
-        try (Response resp = call(request(routerServer.uri().resolve("/my-target-server/blah%20blah?this%20thing=some%20value")))) {
+        try (Response resp = call(request(routerServer.uri(
+            // FIXME: We don't use explicit http()/httpsUri() here
+            //  so if it's a rust router and it's not in tls mode
+            //  here will be a plain http scheme url,
+            //  and given Rust doesn't support h2c mode (plaintext http2)
+            //  and by default rust router is http2 enabled where possible
+            //  so we need this special handling in the empty if body
+        ).resolve("/my-target-server/blah%20blah?this%20thing=some%20value")))) {
             assertThat(resp.code(), is(200));
             assertThat(resp.header("Content-Length"), is(nullValue()));
-            assertThat(resp.header("Transfer-Encoding"), is("chunked"));
+            //noinspection StatementWithEmptyBody
+            if (RustTestHelper.isRustMode() && RustTestHelper.isTlsMode()) {
+
+            } else {
+                assertThat(resp.header("Transfer-Encoding"), is("chunked"));
+            }
             assertThat(resp.body().string(), is("Got GET /my-target-server/blah%20blah and query some value"));
         }
     }
