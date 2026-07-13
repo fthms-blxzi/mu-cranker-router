@@ -41,12 +41,7 @@ public class RustCrankerRouter implements CrankerRouter {
             List<String> supportedCrankerProtocol,
             java.util.function.Function<io.muserver.MuRequest, String> clientIpProvider
     ) {
-        int portToUse = lastAssignedPort;
-        if (portToUse == 0 || !isPortFree(portToUse)) {
-            portToUse = findFreePort();
-        }
-        lastAssignedPort = portToUse;
-        this.regPort = portToUse;
+        this.regPort = findFreePort();
         this.visitPort = this.regPort;
 
         HttpClient client = null;

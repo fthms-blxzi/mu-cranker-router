@@ -14,6 +14,7 @@ import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,13 +28,17 @@ public class ClientUtils {
 
         Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
         boolean isDebug = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("jdwp");
-        client = new OkHttpClient.Builder()
+        OkHttpClient.Builder builder = new okhttp3.OkHttpClient.Builder()
             .retryOnConnectionFailure(false)
             .followRedirects(false)
             .followSslRedirects(false)
             .hostnameVerifier((hostname, session) -> true)
             .readTimeout(isDebug ? 180 : 20, TimeUnit.SECONDS)
-            .sslSocketFactory(sslContextForTesting(veryTrustingTrustManager).getSocketFactory(), veryTrustingTrustManager).build();
+            .sslSocketFactory(sslContextForTesting(veryTrustingTrustManager).getSocketFactory(), veryTrustingTrustManager);
+        if (RustTestHelper.isRustMode()) {
+            builder.protocols(List.of(okhttp3.Protocol.HTTP_1_1));
+        }
+        client = builder.build();
 
         ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
     }
@@ -61,10 +66,6 @@ public class ClientUtils {
 
     public static Request.Builder request() {
         Request.Builder builder = new Request.Builder();
-        boolean isRustMode = scaffolding.RustTestHelper.isRustMode();
-        if (isRustMode) {
-            builder.header("Connection", "close");
-        }
         return builder;
     }
     public static Request.Builder request(URI uri) {
