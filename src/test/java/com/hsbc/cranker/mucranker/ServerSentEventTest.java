@@ -42,7 +42,9 @@ public class ServerSentEventTest extends BaseEndToEndTest {
 
         this.crankerRouter = crankerRouter()
             .withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0"))
-            .withConnectorMaxWaitInMillis(400).start();
+            .withConnectorMaxWaitInMillis(400)
+            .withHttp2(false)
+            .start();
 
         this.router = httpsServerForTest()
             .addHandler(crankerRouter.createRegistrationHandler())
@@ -106,7 +108,9 @@ public class ServerSentEventTest extends BaseEndToEndTest {
 
         this.crankerRouter = crankerRouter()
             .withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0"))
-            .withConnectorMaxWaitInMillis(400).start();
+            .withConnectorMaxWaitInMillis(400)
+            .withHttp2(false)
+            .start();
 
         this.router = httpsServerForTest()
             .addHandler(crankerRouter.createRegistrationHandler())

@@ -83,7 +83,7 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
             })
             .start();
 
-        this.crankerRouter = crankerRouter().withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0")).start();
+        this.crankerRouter = crankerRouter().withSupportedCrankerProtocols(List.of("cranker_1.0", "cranker_3.0")).withHttp2(false).start();
 
         this.router = httpsServer()
             .withHttp2Config(Http2ConfigBuilder.http2Config().enabled(false))
