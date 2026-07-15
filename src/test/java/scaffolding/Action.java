@@ -10,7 +10,7 @@ public interface Action {
         try {
             action.run();
         } catch (Exception e) {
-            log.info("Ignoring exception: " + e.getMessage());
+            log.info("Ignoring exception: ", e);
         }
     }
 

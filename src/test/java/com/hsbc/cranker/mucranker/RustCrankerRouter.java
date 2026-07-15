@@ -131,7 +131,6 @@ public class RustCrankerRouter implements CrankerRouter {
             if (exe == null || !exe.exists()) {
                 throw new IllegalStateException("Rust unified_router_server binary not found. Please specify RUST_ROUTER_SERVER_EXE or run 'cargo build --example unified_router_server'");
             }
-            System.err.println("STARTING RUST EXE FROM: " + exe);
             List<String> cmd = new ArrayList<>();
             cmd.add(exe.getCanonicalPath());
             cmd.add("--reg-port");

@@ -132,7 +132,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
         client.newCall(request(router.uri().resolve("/make")).build()).execute().close();
         List<Cookie> cookies = client.cookieJar().loadForRequest(HttpUrl.get(router.uri()));
         assertThat(cookies.size(), is(2));
-        System.err.println("cookies: " + cookies); // FIXME: Not the same order, in rust router 2 first then 1
         assertThat(cookies.get(0).value(), is("1"));
         assertThat(cookies.get(1).value(), is("2"));
 
