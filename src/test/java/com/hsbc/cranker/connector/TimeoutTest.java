@@ -128,11 +128,7 @@ public class TimeoutTest {
             resp.body().string();
             fail("should throw exception already.");
         } catch (IOException expected) {
-            if (!doHttp2 || (RustTestHelper.isRustMode() && !RustTestHelper.isTlsMode())) {
-                // FIXME: If we do HTTP/2 but in non tls mode (http scheme url)
-                //  since axum/hyper doesn't support cleartext HTTP/2 (h2c)
-                //  it will fallback to HTTP/1.1 so it will be a normal
-                //  EOFException for HTTP/1.1
+            if (!doHttp2) {
                 assertInstanceOf(EOFException.class, expected);
             } else {
                 assertInstanceOf(StreamResetException.class, expected);

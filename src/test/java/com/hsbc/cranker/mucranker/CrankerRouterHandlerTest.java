@@ -86,7 +86,7 @@ public class CrankerRouterHandlerTest {
             assertThat(resp.code(), is(200));
             assertThat(resp.header("Content-Length"), is(nullValue()));
             //noinspection StatementWithEmptyBody
-            if (RustTestHelper.isRustMode() && RustTestHelper.isTlsMode()) {
+            if (RustTestHelper.isRustMode()) {
 
             } else {
                 assertThat(resp.header("Transfer-Encoding"), is("chunked"));

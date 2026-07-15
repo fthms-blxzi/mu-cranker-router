@@ -211,7 +211,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
             final String[] split = resp.body().string().split("\n");
             // forward:by=10.0.0.10;for=127.0.0.1;host=example.org;proto=https
             /* @formatter:off */
-            if (RustTestHelper.isRustMode() && !RustTestHelper.isTlsMode()) {} else
             assertThat(split[0], containsString("host=example.org;proto=https"));
             /* @formatter:on */
             // x-forwarded-host:example.org
@@ -256,7 +255,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
             assertThat(split[2], containsString("host:localhost:"));
             // forward:[for=www.fxclientui.gfx.us.gbm.hsbc.com,by=10.0.0.10;for=127.0.0.1;host=example.org;proto=https]
             /* @formatter:off */
-            if (RustTestHelper.isRustMode() && !RustTestHelper.isTlsMode()) {} else
             assertThat(split[0], containsString("host=example.org;proto=https"));
             /* @formatter:on */
             assertThat(split[0], containsString(",")); // size is 2
@@ -307,7 +305,6 @@ public class HeaderProxyingTest extends BaseEndToEndTest {
         try (Response resp = call(request(router.uri()))) {
             assert resp.body() != null;
             /* @formatter:off */
-            if (RustTestHelper.isRustMode() && !RustTestHelper.isTlsMode()) {} else
             assertThat(resp.body().string(), oneOf("https " + router.uri().getAuthority() + " 127.0.0.1 1", "https " + router.uri().getAuthority() + " 0:0:0:0:0:0:0:1 1"));
             /* @formatter:on */
         }
