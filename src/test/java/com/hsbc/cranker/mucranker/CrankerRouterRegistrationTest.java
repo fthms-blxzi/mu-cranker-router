@@ -68,7 +68,7 @@ public class CrankerRouterRegistrationTest {
     }
 
     @RepeatedTest(3)
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode")
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode") // NOTE: Route resolver cannot be injected to Rust exe
     public void canMapRouteWithStashWhenUsingLongFirstRouteResolver(RepetitionInfo repetitionInfo) throws IOException {
 
         crankerRouter = crankerRouter()
@@ -99,7 +99,7 @@ public class CrankerRouterRegistrationTest {
     }
 
     @Test
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode")
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode")  // NOTE: ip provider cannot be injected to Rust exe
     public void canUseCustomizedIpProviderToKnowClientIp() {
         String forValue = "126.0.0.0";
         ForwardedHeader forwardedHeader = new ForwardedHeader("125.0.0.0", forValue, "forwarded.example.org", "http", null);
@@ -134,7 +134,7 @@ public class CrankerRouterRegistrationTest {
     }
 
     @Test
-    @DisabledIf("scaffolding.RustTestHelper#isRustMode")
+    @DisabledIf("scaffolding.RustTestHelper#isRustMode")  // NOTE: Customer mu handler cannot be injected to Rust exe
     public void canUseDefaultMethodToGetClientIp() {
         String forValue = "126.0.0.0";
         ForwardedHeader forwardedHeader = new ForwardedHeader("125.0.0.0", forValue, "forwarded.example.org", "http", null);

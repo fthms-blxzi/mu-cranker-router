@@ -118,11 +118,7 @@ public class TimeoutTest {
                 })
             .start();
         connector = startConnector("my-app",  preferredProtocols(repetitionInfo));
-        try (Response resp = call(request(routerServer.uri(
-            // FIXME: We don't specify http/https url here, so if
-            //  it's a rust router run in non tls mode
-            //  here will be an http scheme url
-        ).resolve("/my-app/send-chunk-then-sleep")))) {
+        try (Response resp = call(request(routerServer.uri().resolve("/my-app/send-chunk-then-sleep")))) {
             assertThat(resp.code(), is(200));
             assert resp.body() != null;
             resp.body().string();

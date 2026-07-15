@@ -81,6 +81,7 @@ public class CrankerRouterRetryTest {
             final String protocol = preferredProtocols.get(0);
             switch (protocol) {
                 case "cranker_3.0": {
+                    // FIXME: We keep the cranker_1.0 behaviour explicitly in axum/rust implementation
                     if (RustTestHelper.isRustMode()) continue;
                     try (Response response = client.newCall(request(router.uri().resolve("/something/blah")).build()).execute()) {
                         assertThat(response.code(), equalTo(404));
